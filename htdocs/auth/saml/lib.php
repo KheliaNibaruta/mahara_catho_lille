@@ -377,6 +377,7 @@ class AuthSaml extends Auth {
 
             $user->expiry             = null;
             $user->expirymailsent     = 0;
+            $user->lastlogin          = time();
 
             $user->firstname          = $firstname;
             $user->lastname           = $lastname;
@@ -462,6 +463,8 @@ class AuthSaml extends Auth {
                 // make sure they are not site staff anymore
                 $user->staff = 0;
             }
+            $user->lastlastlogin      = $user->lastlogin;
+            $user->lastlogin          = time();
         }
 
         if ($hasaffiliations) {
@@ -491,7 +494,7 @@ class AuthSaml extends Auth {
                         if ($currentprincipalemail === $affiliationroles['email']) {
                             // our principal email was an affiliated one so we want to mark
                             // as principal again instead of the one passed in on 'email' variable
-                            $primaryemail = $currentprincipalemail;
+                            set_user_primary_email($user->id, $affiliationroles['email']);
                         }
                     }
                     unset($oldaffiliations[$affiliation]);
@@ -794,7 +797,6 @@ class PluginAuthSaml extends PluginAuth {
         'institutionattribute'   => '',
         'institutionvalue'       => '',
         'institutionregex'       => 0,
-        'instancename'           => 'saml',
         'remoteuser'             => 1,
         'loginlink'              => 0,
         'institutionidpentityid' => '',
@@ -864,7 +866,7 @@ class PluginAuthSaml extends PluginAuth {
 
     public static function install_auth_default() {
         // Set library version to download
-        set_config_plugin('auth', 'saml', 'version', '1.19.7');
+        set_config_plugin('auth', 'saml', 'version', '1.19.5');
     }
 
     private static function delete_old_certificates() {
@@ -1524,7 +1526,6 @@ class PluginAuthSaml extends PluginAuth {
                 self::$default_config['institutionvalue'] = $institution;
             }
             self::$default_config['active'] = $default->active;
-            self::$default_config['instancename'] = $default->instancename;
         }
         else {
             $default = new stdClass();
@@ -1633,9 +1634,8 @@ EOF;
                 'value' => $instance,
             ),
             'instancename' => array(
-                'type'  => 'text',
-                'title' => get_string('instancename', 'auth.saml'),
-                'defaultvalue' => self::$default_config['instancename'],
+                'type'  => 'hidden',
+                'value' => 'SAML',
             ),
             'institution' => array(
                 'type'  => 'hidden',
@@ -1993,7 +1993,7 @@ EOF;
         $authinstance->institution  = $values['institution'];
         $authinstance->authname     = $values['authname'];
         $authinstance->active       = (int) $values['active'];
-        $authinstance->instancename = $values['instancename'];
+        $authinstance->instancename = $values['authname'];
 
         if ($values['create']) {
             $values['instance'] = insert_record('auth_instance', $authinstance, 'id', true);
@@ -2143,7 +2143,7 @@ EOF;
         // redirect to IdP discovery page
         $idps = array();
         if ($rawidps = get_records_sql_array("
-                SELECT aic.value, ai.institution, ai.authname, ai.instancename
+                SELECT aic.value, ai.institution
                 FROM {auth_instance} ai
                 JOIN {auth_instance_config} aic ON aic.instance = ai.id
                 WHERE ai.authname = ?
@@ -2168,10 +2168,7 @@ EOF;
                 $idpurl = $url;
                 $idpurl .= param_exists('login') ? '&' : '?';
                 $idpurl .= 'idpentityid=' . $idp->value;
-                if (!empty($idp->instancename) && $idp->authname != $idp->instancename) {
-                    $ssolabel = $idp->instancename;
-                }
-                else if (string_exists('login' . $idp->institution, 'auth.saml')) {
+                if (string_exists('login' . $idp->institution, 'auth.saml')) {
                     // we use custom string defined in auth.saml
                     $ssolabel = get_string('login' . $idp->institution, 'auth.saml');
                 }

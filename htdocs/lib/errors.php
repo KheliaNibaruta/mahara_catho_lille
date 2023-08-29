@@ -140,7 +140,6 @@ function log_message ($message, $loglevel, $escape, $backtrace, $file=null, $lin
     }
 
     // Get nice backtrace information if required
-    // phpcs:ignore
     $trace = ($trace) ? $trace : debug_backtrace();
     // If the last caller was the 'error' function then it came from a PHP warning
     if (!is_null($file)) {
@@ -934,13 +933,7 @@ class EmailDisabledException extends EmailException {}
 /**
  * Exception - artefact not found
  */
-class ArtefactNotFoundException extends NotFoundException {
-    public function strings() {
-        return array_merge(parent::strings(),
-            array('message' => get_string('artefactnotfoundexception', 'error')),
-            array('title'   => get_string('notfound', 'error')));
-    }
-}
+class ArtefactNotFoundException extends NotFoundException {}
 
 /**
  * Exception - block instance not found
@@ -1033,7 +1026,7 @@ class AccessDeniedException extends UserException {
 
     public function render_exception() {
         global $USER;
-        if (defined('PUBLIC_ACCESS') && !$USER->is_logged_in()) {
+        if (defined('PUBLIC') && !$USER->is_logged_in()) {
             $loginurl = get_full_script_path();
             $loginurl .= (false === strpos($loginurl, '?')) ? '?' : '&';
             $loginurl .= 'login';

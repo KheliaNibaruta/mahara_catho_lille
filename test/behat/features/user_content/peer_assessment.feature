@@ -1,7 +1,7 @@
-@javascript @core @blocktype @blocktype_peerassessment
-Feature: Interacting with the peer assessment and signoff config/functionality
+@javascript @core @blocktype @blocktype_peerassessment @blocktype_signoff
+Feature: Interacting with the peer assessment and signoff blocks
     As an author
-    I want to add a peer assessment and signoff switch to my page
+    I want to add a peer assessment and signoff block to my page
     So I can get peer assessment before signing off the page
     As a peer
     I want to add a peer assessment to the page
@@ -53,40 +53,43 @@ Background:
     # Add signoff block to Page UserA_00
     Given I log in as "UserA" with password "Kupuh1pa!"
     And I go to portfolio page "Page UserA_00"
-    Then I click on "Edit"
-    And I click on "Configure" in the "Toolbar buttons" "Nav" property
-    When I click on "Advanced"
-    And I enable the switch "Sign-off"
+    And I click on "Edit"
+    # Author adds sign off block
+    When I click on the add block button
+    And I click on "Add" in the "Add new block" "Blocks" property
+    And I click on blocktype "Sign-off"
     And I enable the switch "Verify"
     And I click on "Save"
+    Then I should see "This block's content is displayed aligned to the right hand side. The block is best placed at top right of the page."
+    And I wait "1" seconds
     And I click on "Return to portfolios"
     And I go to portfolio page "Page UserA_01"
-    Then I click on "Edit"
-    # Author adds sign off switch
-    And I click on "Configure" in the "Toolbar buttons" "Nav" property
-    When I click on "Advanced"
-    And I enable the switch "Sign-off"
+    And I click on "Edit"
+    # Author adds sign off block
+    When I click on the add block button
+    And I click on "Add" in the "Add new block" "Blocks" property
+    And I click on blocktype "Sign-off"
     And I enable the switch "Verify"
     And I click on "Save"
-    Then I click on "Display"
-    Then I should see "Mark this page as 'Signed off' when you have finished adding all your evidence."
-    # Add peer assessment and signoff switch to Page Page UserA_03
+    Then I should see "This block's content is displayed aligned to the right hand side. The block is best placed at top right of the page."
+    And I wait "1" seconds
+    And I click on "Return to portfolios"
+    # Add peer assessment and signoff blocks to Page Page UserA_03
     Given I go to portfolio page "Page UserA_03"
     And I click on "Edit"
-    # Author adds sign off switch
-    And I click on "Configure" in the "Toolbar buttons" "Nav" property
-    When I click on "Advanced"
-    And I enable the switch "Sign-off"
+    # Author adds sign off block
+    When I click on the add block button
+    And I click on "Add" in the "Add new block" "Blocks" property
+    And I click on blocktype "Sign-off"
     And I enable the switch "Verify"
     And I click on "Save"
-    When I click on "Display"
-    Then I click on "More options"
-    # Then I should see "This block's content is displayed aligned to the right hand side. The block is best placed at top right of the page."
+    Then I should see "This block's content is displayed aligned to the right hand side. The block is best placed at top right of the page."
+    And I wait "1" seconds
     And I click on "Return to portfolios"
     # share the page with people and give a role
     When I choose "Shared by me" in "Share" from main menu
     And I click on "Pages" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Page UserA_03" row
+    And I click on "Edit access" in "Page UserA_03" row
     And I select "Person" from "accesslist[0][searchtype]"
     And I select "Dmitri User" from select2 nested search box in row number "1"
     And I select "Peer and manager" from "accesslist[0][role]"

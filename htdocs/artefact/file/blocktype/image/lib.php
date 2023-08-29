@@ -50,9 +50,6 @@ class PluginBlocktypeImage extends MaharaCoreBlocktype {
         $edittime = '&time=' . time();
         if ($image instanceof ArtefactTypeProfileIcon) {
             $src = $wwwroot . 'thumb.php?type=profileiconbyid&id=' . $id . '&view=' . $viewid . $edittime;
-            $isdecorative = false;
-            $alttext = '';
-            $altiscaption = false;
             $description = $image->get('title');
         }
         else {

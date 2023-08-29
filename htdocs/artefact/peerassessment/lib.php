@@ -181,7 +181,7 @@ class PluginArtefactPeerassessment extends PluginArtefact {
                 'name' => 'verify',
                 'title' => get_string('verifyassessment', 'artefact.peerassessment'),
                 'plugin' => 'peerassessment',
-                'active' => get_field('artefact_installed', 'active', 'name', 'peerassessment'),
+                'active' => get_field('blocktype_installed', 'active', 'name', 'signoff', 'artefactplugin', 'peerassessment'),
                 'iscountable' => true,
                 'is_metaartefact' => true,
             )
@@ -573,10 +573,10 @@ class ArtefactTypePeerassessment extends ArtefactType {
     }
 
     public static function is_signed_off(View $view) {
-        if ($view->get('owner') || ($view->get('group') && $view->get('type') == 'activity')) {
-            return (bool)get_field_sql("SELECT signoff FROM {view_signoff_verify} WHERE view = ? LIMIT 1", array($view->get('id')));
+        if (!$view->get('owner')) {
+            return false;
         }
-        return false;
+        return (bool)get_field_sql("SELECT signoff FROM {view_signoff_verify} WHERE view = ? LIMIT 1", array($view->get('id')));
     }
 
     /*
@@ -584,8 +584,14 @@ class ArtefactTypePeerassessment extends ArtefactType {
      * @param $view the view object of the view to verify
     */
     public static function is_verify_enabled(View $view) {
-        $verify = get_field('view_signoff_verify', 'show_verify', 'view', $view->get('id'));
-        return $verify;
+        $configdata = get_field_sql("SELECT configdata FROM {block_instance} WHERE view = ? AND blocktype = ? LIMIT 1", array($view->get('id'), 'signoff'));
+        if ($configdata) {
+            $configdata = unserialize($configdata);
+            if (isset($configdata['verify'])) {
+                return $configdata['verify'];
+            }
+        }
+        return false;
     }
 
     public static function is_verified(View $view) {

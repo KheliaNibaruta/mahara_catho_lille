@@ -29,7 +29,7 @@ Scenario: Creating a collection AND adding pages
         | Collection name | Test Collection |
         | Collection description | Test |
     # Adding page 1, 2 & 3 to the collection
-    And I click on "Continue: Edit collection pages"
+    And I click on "Next: Edit collection pages"
     And I click on "All"
     Then I click on "Add pages"
     # Verifying that the pages were added
@@ -56,7 +56,7 @@ Scenario: Creating a collection AND adding pages
     And I should see "Page title"
     And I click on "Collections"
     # Continue initial test
-    And I click on "Share" in "Test Collection" row
+    And I click on "Edit access"
     And I select "Registered people" from "accesslist[0][searchtype]"
     And I click on "Save"
     And I choose "Portfolios" in "Create" from main menu

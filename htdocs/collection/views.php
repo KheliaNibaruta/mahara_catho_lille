@@ -30,9 +30,6 @@ $collection = new Collection($id);
 if (!$USER->can_edit_collection($collection)) {
     throw new AccessDeniedException(get_string('canteditcollection', 'collection'));
 }
-if ($collection->get('outcomeportfolio')) {
-    throw new AccessDeniedException(get_string('canteditcollection', 'collection'));
-}
 $sesskey = $USER->get('sesskey');
 $inlinejs = '';
 if ($accesschanged = $SESSION->get('pageaccesschanged')) {
@@ -172,7 +169,7 @@ if ($available = Collection::available_views($owner, $groupid, $institutionname)
 }
 
 $smarty = smarty(array('jquery','js/jquery/jquery-ui/js/jquery-ui.min.js','js/jquery/jquery-ui/js/jquery-ui.touch-punch.min.js', 'manage-collection-pages'));
-
+setpageicon($smarty, 'icon-folder-open');
 
 $smarty->assign('id', $id);
 $smarty->assign('INLINEJAVASCRIPT', $inlinejs);

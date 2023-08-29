@@ -66,14 +66,14 @@ Background:
    # Adding a tag to page 1
    And I choose "Portfolios" in "Create" from main menu
    And I click on "Edit" in "Page UserA_01" card menu
-   And I click on "Configure" in the "Toolbar buttons" "Nav" property
+   And I click on "Settings" in the "Toolbar buttons" "Nav" property
    And I fill in select2 input "settings_tags" with "blue" and select "blue"
    And I fill in select2 input "settings_tags" with "My tag" and select "My tag"
    And I click on "Save"
    # Adding a tag to page 2
    And I choose "Portfolios" in "Create" from main menu
    And I click on "Edit" in "Page UserA_02" card menu
-   And I click on "Configure" in the "Toolbar buttons" "Nav" property
+   And I click on "Settings" in the "Toolbar buttons" "Nav" property
    And I fill in select2 input "settings_tags" with "#orange" and select "#orange"
    And I fill in select2 input "settings_tags" with "My tag" and select "My tag"
    And I click on "Save"
@@ -134,7 +134,7 @@ Background:
    # Check tags can be deleted from a page - Bug 1715491
    Given I click on "Page UserA_02"
    And I click on "Edit"
-   And I click on "Configure" in the "Toolbar buttons" "Nav" property
+   And I click on "Settings" in the "Toolbar buttons" "Nav" property
    And I clear value "#orange (1)" from select2 field "settings_tags"
    And I click on "Save"
    And I display the page
@@ -153,16 +153,16 @@ Background:
    When I click on "Save"
    Then I should see "Tagged journal entries"
    And I should see "Plans"
-   When I click on "Configure" in the "Toolbar buttons" "Nav" property
+   When I click on "Settings" in the "Toolbar buttons" "Nav" property
    And I fill in select2 input "settings_createtags" with "@black" and select "@black"
    And I click on "Save"
    Then I should see "Note Block 3304"
-   When I click on "Configure" in the "Toolbar buttons" "Nav" property
+   When I click on "Settings" in the "Toolbar buttons" "Nav" property
    And I fill in select2 input "settings_createtags" with "ébrown" and select "ébrown"
    And I click on "Save"
 
    When I choose "Shared by me" in "Share" from main menu
-   And I click on "Share" in "Page UserA_01" row
+   And I click on "Edit access" in "Page UserA_01" row
    And I set the select2 value "Page UserA_01, Page UserA_02, Create portfolio via tags feature" for "editaccess_views"
    And I select "Public" from "accesslist[0][searchtype]"
    And I click on "Save"

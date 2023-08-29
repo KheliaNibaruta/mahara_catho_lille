@@ -144,7 +144,6 @@ $poster = new User();
 $poster->find_by_id($post->poster);
 
 $smarty = smarty();
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('subheading', TITLE);
 $smarty->assign('post', $post);
 $smarty->assign('deleteduser', $poster->get('deleted'));

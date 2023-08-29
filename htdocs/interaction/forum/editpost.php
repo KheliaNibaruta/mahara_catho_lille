@@ -85,8 +85,7 @@ if ($parent) {
         $parent->filecount = count($parent->attachments);
         safe_require('artefact', 'file');
         foreach ($parent->attachments as $file) {
-            $classname = generate_artefact_class_name($file->artefacttype);
-            $file->icon = $classname::get_icon(array('id' => $file->id, 'post' => $parentid));
+            $file->icon = call_static_method(generate_artefact_class_name($file->artefacttype), 'get_icon', array('id' => $file->id, 'post' => $parentid));
         }
     }
 }
@@ -479,7 +478,6 @@ function editpost_callback(form, data) {
 EOF;
 
 $smarty = smarty();
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('deleteduser', $poster->get('deleted'));
 $smarty->assign('poster', $poster);
 $smarty->assign('editform', $editform);

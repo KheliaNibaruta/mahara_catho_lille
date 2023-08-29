@@ -31,8 +31,7 @@ class ApplicationSet implements Iterator {
         reset($this->resultset);
     }
 
-    #[\ReturnTypeWillChange]
-    public function current() {
+    public function current(): mixed {
         if (false === current($this->resultset)) {
             return false;
         }
@@ -46,8 +45,7 @@ class ApplicationSet implements Iterator {
         return current($this->resultset);
     }
 
-    #[\ReturnTypeWillChange]
-    public function key() {
+    public function key(): mixed {
         return key($this->resultset);
     }
 

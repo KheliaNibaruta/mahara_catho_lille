@@ -15,7 +15,6 @@ Background:
      | UserA    | Kupuh1pa! | UserA@example.org | Angela    | User | instone | internal | staff |
      | UserB    | Kupuh1pa! | UserB@example.org | Bob       | User | instone | internal | member |
      | UserC    | Kupuh1pa! | UserC@example.org | Cecilia   | User | instone | internal | member |
-     | UserD    | Kupuh1pa! | UserD@example.org | Dave      | User | instone | internal | admin |
 
     And the following "groups" exist:
      | name   | owner | description           | grouptype | open | invitefriends | editroles | submittableto | allowarchives | members      | staff | institution |
@@ -38,9 +37,6 @@ Background:
      | Page UserA_10 | Page 10 | user | UserA |
      | Page UserA_11 | Page 11 | user | UserA |
      | Page UserA_12 | Page 12 | user | UserA |
-     | Page UserA_13 | Page 13 | user | UserA |
-     | Page UserA_14 | Page 14 | user | UserA |
-     | Page UserA_15 | Page 15 | user | UserA |
      | Page UserB_01 | UserB's page 01 | user | UserB |
      | Page UserB_02 | UserB's page 02 | user | UserB |
      | Page UserB_03 | UserB's page 03 | user | UserB |
@@ -96,9 +92,8 @@ Background:
 
      # To test portfolio completion in groups
     And the following "collections" exist:
-     | title         | description   | ownertype | ownername | pages                                     | progresscompletion |
-     | Coll GroupA   | Group PC      | group     | GroupA    | Page GroupA                               | ON                 |
-     | Progress Coll | Collection 07 | user      | UserA     | Page UserA_13,Page UserA_14,Page UserA_15 | ON                 |
+     | title       | description | ownertype | ownername | pages | progresscompletion |
+     | Coll GroupA | Group PC    | group     | GroupA    | Page GroupA | ON |
 
 Scenario: The list of group portfolios. Shared/submitted portfolios should
 be displayed page by page and sorted by "page title (A-Z)" or "most recently updated".
@@ -109,67 +104,21 @@ This list must take into account the sort option chosen in the block config (Bug
     And I should see "Angela"
     And I should see "GroupA"
     # Share portfolios to the "GroupA"
-    # Edit sharing permissions for Page UserA_01
+    # Edit access for Page UserA_01
     And I choose "Shared by me" in "Share" from main menu
     And I click on "Pages" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Page UserA_01" row
+    And I click on "Edit access" in "Page UserA_01" row
     And I set the select2 value "Page UserA_01, Page UserA_02, Page UserA_03, Page UserA_04, Page UserA_05" for "editaccess_views"
     And I select "GroupA" from "accesslist[0][searchtype]"
     And I click on "Save"
-    # Edit sharing permissions for Collection UserA_01
+    # Edit access for Collection UserA_01
     And I choose "Shared by me" in "Share" from main menu
     And I click on "Collections" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Collection UserA_01" row
+    And I click on "Edit access" in "Collection UserA_01" row
     And I should not see "Collection UserA_02" in the "Collections text-box" "Views" property
     And I set the select2 value "Collection UserA_01, Collection UserA_02, Collection UserA_03, Collection UserA_04, Collection UserA_05, Collection UserA_06" for "editaccess_collections"
     And I select "GroupA" from "accesslist[0][searchtype]"
     And I click on "Save"
-    # Set up a progress completion collection
-    And I choose "Portfolios" in "Create" from main menu
-    And I click on "Progress Coll"
-    Then I should see "Portfolio completion"
-    And I click on "Next page"
-    And I click on "Edit"
-    And I click on "Configure"
-    And I expand the section "Advanced"
-    And I enable the switch "Sign-off"
-    And I click on "Save"
-    And I click on "Display page"
-    Then I should see "Signed off"
-    And I should not see "Verified"
-    And I click on "Next page"
-    And I click on "Edit"
-    And I click on "Configure"
-    And I expand the section "Advanced"
-    And I enable the switch "Sign-off"
-    And I enable the switch "Verify"
-    And I click on "Save"
-    And I click on "Display page"
-    Then I should see "Signed off"
-    And I should see "Verified"
-    And I click on the "Signed off" "Views" property
-    And I click on "Yes" in the "Sign-off page" "Modal" property
-    # move back 2 pages to the completion page
-    And I click on "Previous page"
-    And I click on "Previous page"
-    Then I should see "33%" in the "#quota_fill" "css_element"
-    And I click on the matrix point "2,2"
-    And I click on "Yes" in the "Sign-off page" "Modal" property
-    Then I should see "67%" in the "#quota_fill" "css_element"
-    And I choose "Shared by me" in "Share" from main menu
-    And I click on "Collections" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Progress Coll" row
-    And I select "Person" from "accesslist[0][searchtype]"
-    And I select "Dave User" from select2 hidden search box in row number "1"
-    And I select "Manager" from "accesslist[0][role]"
-    And I click on "Save"
-    And I log out
-    # Log in as institution admin user
-    Given I log in as "UserD" with password "Kupuh1pa!"
-    And I click on "Progress Coll"
-    And I click on the matrix point "3,3"
-    And I click on "Yes" in the "Verify page" "Modal" property
-    Then I should see "100%" in the "#quota_fill" "css_element"
     And I log out
     # Log in as a normal user
     Given I log in as "UserB" with password "Kupuh1pa!"
@@ -177,9 +126,9 @@ This list must take into account the sort option chosen in the block config (Bug
     And I should see "Bob"
     And I should see "GroupA"
     # Share portfolios to the "GroupA"
-    # Edit sharing permissions for pages
+    # Edit access for pages
     And I choose "Shared by me" in "Share" from main menu
-    And I click on "Share" in "Page UserB_01" row
+    And I click on "Edit access" in "Page UserB_01" row
     And I set the select2 value "Page UserB_01, Page UserB_02, Page UserB_03, Page UserB_04, Page UserB_05, Page UserB_06, Page UserB_07" for "editaccess_views"
     And I select "GroupA" from "accesslist[0][searchtype]"
     And I click on "Save"
@@ -248,7 +197,7 @@ This list must take into account the sort option chosen in the block config (Bug
     # Update the group page "Page GroupA_06"
     And I click on "Portfolios" in the "Navigation" "Groups" property
     And I click on "Edit" in "Page GroupA_06" card menu
-    And I click on "Configure" in the "Toolbar buttons" "Nav" property
+    And I click on "Settings" in the "Toolbar buttons" "Nav" property
     And I set the field "Page description" to "<p>Group page 06 (updated)</p>"
     And I scroll to the base of id "settings_submitform"
     And I click on "Save"
@@ -270,7 +219,7 @@ This list must take into account the sort option chosen in the block config (Bug
     And I scroll to the base of id "showmorebtn"
     And I click on "Show more"
     And I click on "Edit" in "Page UserA_01" card menu
-    And I click on "Configure" in the "Toolbar buttons" "Nav" property
+    And I click on "Settings" in the "Toolbar buttons" "Nav" property
     And I set the field "Page description" to "<p>Page 01 (updated)</p>"
     And I scroll to the base of id "settings_submitform"
     And I click on "Save"
@@ -285,10 +234,10 @@ This list must take into account the sort option chosen in the block config (Bug
     And I should not see "Page UserA_01" in the "Pages shared with this group" "Groups" property
     # Update the shared collection "Collection UserA_06"
     And I choose "Portfolios" in "Create" from main menu
-    And I click on "Configure" in "Collection UserA_06" card menu
+    And I click on "Edit" in "Collection UserA_06" card menu
     And I fill in "Collection description" with "Collection 06 (updated)"
     And I scroll to the base of id "edit_submitform"
-    And I click on "Continue"
+    And I click on "Save"
     # Check if it is now in the first page of the list of shared collections
     And I choose "Groups" in "Engage" from main menu
     And I scroll to the center of id "findgroups"
@@ -333,17 +282,17 @@ This list must take into account the sort option chosen in the block config (Bug
     And I should see "Cecilia"
     And I should see "GroupD"
     # Share portfolios to the standard "GroupD"
-    # Edit sharing permissions for Page UserC_01, Page UserC_03, Page UserC_04
+    # Edit access for Page UserC_01, Page UserC_03, Page UserC_04
     And I choose "Shared by me" in "Share" from main menu
     And I click on "Pages" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Page UserC_01" row
+    And I click on "Edit access" in "Page UserC_01" row
     And I set the select2 value "Page UserC_01, Page UserC_03, Page UserC_04" for "editaccess_views"
     And I select "GroupD" from "accesslist[0][searchtype]"
     And I click on "Save"
-    # Edit sharing permissions for Collection UserC_01, Collection UserC_03, Collection UserC_04
+    # Edit access for Collection UserC_01, Collection UserC_03, Collection UserC_04
     And I choose "Shared by me" in "Share" from main menu
     And I click on "Collections" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Collection UserC_01" row
+    And I click on "Edit access" in "Collection UserC_01" row
     And I set the select2 value "Collection UserC_01, Collection UserC_03, Collection UserC_04" for "editaccess_collections"
     And I select "GroupD" from "accesslist[0][searchtype]"
     And I click on "Save"
@@ -373,12 +322,12 @@ This list must take into account the sort option chosen in the block config (Bug
     # Verifying log in was successful
     And I should see "Angela"
     And I click on "GroupD"
-    And I should see "Page UserC_03" in the "Pages shared with this group" "Groups" property
-    And I should see "Page UserC_03; submitted" in the "Submissions to this group" "Groups" property
+    And I should not see "Page UserC_03" in the "Pages shared with this group" "Groups" property
+    And I should see "Page UserC_03" in the "Submissions to this group" "Groups" property
     And I should see "Collection UserC_01" in the "Collections shared with this group" "Groups" property
-    And I should see "Collection UserC_03" in the "Collections shared with this group" "Groups" property
+    And I should not see "Collection UserC_03" in the "Collections shared with this group" "Groups" property
     And I should see "Collection UserC_04" in the "Collections shared with this group" "Groups" property
-    And I should see "Collection UserC_03; submitted" in the "Submissions to this group" "Groups" property
+    And I should see "Collection UserC_03" in the "Submissions to this group" "Groups" property
     And I log out
     Given I log in as "UserB" with password "Kupuh1pa!"
     # Verifying log in was successful
@@ -401,17 +350,17 @@ This list must take into account the sort option chosen in the block config (Bug
     And I should see "Cecilia"
     And I should see "GroupC"
     # Share portfolios to the "GroupC"
-    # Edit sharing permissions for Page UserC_09, Page UserC_11, Page UserC_12
+    # Edit access for Page UserC_09, Page UserC_11, Page UserC_12
     And I choose "Shared by me" in "Share" from main menu
     And I click on "Pages" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Page UserC_09" row
+    And I click on "Edit access" in "Page UserC_09" row
     And I set the select2 value "Page UserC_09, Page UserC_11, Page UserC_12" for "editaccess_views"
     And I select "GroupC" from "accesslist[0][searchtype]"
     And I click on "Save"
-    # Edit sharing permissions for Collection UserC_05, Collection UserC_07, Collection UserC_08
+    # Edit access for Collection UserC_05, Collection UserC_07, Collection UserC_08
     And I choose "Shared by me" in "Share" from main menu
     And I click on "Collections" in the "Share tabs" "Misc" property
-    And I click on "Share" in "Collection UserC_05" row
+    And I click on "Edit access" in "Collection UserC_05" row
     And I set the select2 value "Collection UserC_05, Collection UserC_07, Collection UserC_08" for "editaccess_collections"
     And I select "GroupC" from "accesslist[0][searchtype]"
     And I click on "Save"
@@ -452,17 +401,16 @@ This list must take into account the sort option chosen in the block config (Bug
     And I click on "GroupC"
     And I should see "Page UserC_09" in the "Pages shared with this group" "Groups" property
     And I should not see "Page UserC_10" in the "Pages shared with this group" "Groups" property
-    And I should see "Page UserC_11" in the "Pages shared with this group" "Groups" property
+    And I should not see "Page UserC_11" in the "Pages shared with this group" "Groups" property
     And I should see "Page UserC_12" in the "Pages shared with this group" "Groups" property
-    And I should see "Page UserC_10; submitted" in the "Submissions to this group" "Groups" property
-    And I should see "Page UserC_11; submitted" in the "Submissions to this group" "Groups" property
+    And I should see "Page UserC_10" in the "Submissions to this group" "Groups" property
+    And I should see "Page UserC_11" in the "Submissions to this group" "Groups" property
     And I should see "Collection UserC_05" in the "Collections shared with this group" "Groups" property
     And I should not see "Collection UserC_06" in the "Collections shared with this group" "Groups" property
-    And I should see "Collection UserC_07" in the "Collections shared with this group" "Groups" property
+    And I should not see "Collection UserC_07" in the "Collections shared with this group" "Groups" property
     And I should see "Collection UserC_08" in the "Collections shared with this group" "Groups" property
-    And I should see "Collection UserC_06; submitted" in the "Submissions to this group" "Groups" property
-    And I should see "Collection UserC_07; submitted" in the "Submissions to this group" "Groups" property
-    And I log out
+    And I should see "Collection UserC_06" in the "Submissions to this group" "Groups" property
+    And I should see "Collection UserC_07" in the "Submissions to this group" "Groups" property
 
 Scenario: Check progress completion is availble in group collections
     Given I log in as "UserA" with password "Kupuh1pa!"

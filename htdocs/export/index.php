@@ -32,10 +32,9 @@ if (!$exportplugins) {
 
 foreach ($exportplugins as $plugin) {
     safe_require('export', $plugin->name);
-    $classname = generate_class_name('export', $plugin->name);
     $exportoptions[$plugin->name] = array(
-        'text' => $classname::get_title(),
-        'description' => $classname::get_description(),
+        'text' => call_static_method(generate_class_name('export', $plugin->name), 'get_title'),
+        'description' => call_static_method(generate_class_name('export', $plugin->name), 'get_description'),
     );
 }
 

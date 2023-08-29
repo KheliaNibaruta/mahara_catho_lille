@@ -50,7 +50,6 @@ if ($collection->is_submitted()) {
 }
 
 $urlparams = array();
-$group = null;
 if (!empty($groupid)) {
     require_once('group.php');
     define('MENUITEM', 'engage/index');
@@ -81,8 +80,7 @@ else {
     $baseurl = get_config('wwwroot') . 'view/index.php';
 }
 
-$outcomesgroup = $group && is_outcomes_group($group->id);
-if (!$USER->can_edit_collection($collection) || (!empty($groupid) && $outcomesgroup && group_user_access($groupid) !== 'admin')) {
+if (!$USER->can_edit_collection($collection)) {
     throw new AccessDeniedException(get_string('canteditcollection', 'collection'));
 }
 
@@ -94,26 +92,19 @@ $elements = $collection->get_collectionform_elements();
 
 if ($copy) {
     $type = 'submit';
-    $submitstr = get_string('continue') . ': ' . get_string('editviews', 'collection');
+    $submitstr = get_string('next') . ': ' . get_string('editviews', 'collection');
     $confirm = null;
     $class = 'btn-primary';
     $subclass = null;
 }
 else {
     $type = 'submitcancel';
-    if ($collection->get('group') && is_outcomes_group($collection->get('group'))) {
-        $submitstr = array('button' => get_string('continue'), 'cancel' => get_string('cancel'));
-        $confirm = array('cancel' => get_string('confirmcancelcreatingcollection', 'collection'));
-    }
-    else if ($new) {
-        $submitstr = array(
-            'button' => get_string('continue') . ': ' . get_string('editviews', 'collection'),
-            'cancel' => get_string('cancel')
-        );
-        $confirm = array('cancel' => get_string('confirmcancelcreatingcollection', 'collection'));
+    if ($new) {
+        $submitstr = array('button' => get_string('next') . ': ' . get_string('editviews', 'collection'), 'cancel' => get_string('cancel'));
+        $confirm = array('cancel' => get_string('confirmcancelcreatingcollection','collection'));
     }
     else {
-        $submitstr = array(get_string('continue'), get_string('cancel'));
+        $submitstr = array(get_string('save'), get_string('cancel'));
         $confirm = null;
     }
     $class = 'btn-primary';
@@ -276,25 +267,7 @@ function collectionedit_submit(Pieform $form, $values) {
         $values['framework'] = null;
     }
     $values['coverimage'] = (isset($values['coverimage']) ? $values['coverimage'] : null);
-
-    if (isset($values['linkedtosourceportfolio']) && $values['linkedtosourceportfolio'] == 0) {
-        // Set submissionoriginal to 0 to unlink the view from the source portfolio.
-        $values['submissionoriginal'] = 0;
-    }
-
-    $groupid = $collection->get('group');
-    $values['outcomeportfolio'] = (int)($groupid && is_outcomes_group($groupid) && $values['outcomeportfolio']);
     $collection = Collection::save($values);
-
-    if (isset($values['linkedtosourceportfolio']) && $values['linkedtosourceportfolio'] == 0 && $collection) {
-        // Unlink the views in this collection from their source view.
-        $viewids = $collection->get_viewids();
-        foreach ($viewids as $viewid) {
-            $view = new View($viewid);
-            $view->set('submissionoriginal', 0);
-            $view->commit();
-        }
-    }
 
     if (isset($values['progresscompletion'])) {
         if ($values['progresscompletion']) {

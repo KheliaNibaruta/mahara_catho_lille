@@ -81,7 +81,6 @@ $deleteform = [
 $form = pieform($deleteform);
 
 $smarty = smarty();
-setpageicon($smarty, 'icon-clipboard-list');
 $smarty->assign('form', $form);
 $smarty->assign('PAGEHEADING', $pageheading);
 $smarty->assign('SUBSECTIONHEADING', $subsectionheading);

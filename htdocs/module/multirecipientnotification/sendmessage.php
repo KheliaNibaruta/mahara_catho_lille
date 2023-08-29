@@ -72,14 +72,15 @@ if (!is_null($replytoid)) {
     if (null === $message) {
         throw new AccessDeniedException(get_string('cantviewmessage', 'group'));
     }
+
     if (0 === count($users)) {
         foreach ($message->userids as $userrelid) {
             if ($USER->get('id') === $userrelid) {
                 continue;
             }
             $deleted = get_field('usr', 'deleted', 'id', $userrelid);
-            if (empty($deleted) && can_send_message($USER->get('id'), $userrelid) &&
-                    $USER->get('id') != $userrelid) {
+            if (($deleted === '0') && can_send_message($USER->to_stdclass(), $userrelid) &&
+                    $USER->id != $userrelid) {
                 $users[] = $userrelid;
             }
             else {
@@ -89,8 +90,8 @@ if (!is_null($replytoid)) {
 
         if ($USER->get('id') !== $message->fromid) {
             $deleted = get_field('usr', 'deleted', 'id', $message->fromid);
-            if (empty($deleted) && can_send_message($USER->get('id'), $message->fromid) &&
-                    $USER->get('id') != $message->fromid) {
+            if (($deleted === '0') && can_send_message($USER->to_stdclass(), $message->fromid) &&
+                    $USER->id != $message->fromid) {
                 $users[] = $message->fromid;
             }
             else {
@@ -118,7 +119,7 @@ if (!is_null($replytoid)) {
             $oldmessage->fromusrlink = profile_url($oldmessage->fromid);
         }
         if ($fromusr->deleted) {
-            $oldmessage->fromusrname = get_string('deleteduser1', 'module.multirecipientnotification', 1);
+            $oldmessage->fromusrname = get_string('deleteduser1');
         }
         else {
             $oldmessage->fromusrname = display_name($oldmessage->fromid);
@@ -142,7 +143,7 @@ if (!is_null($replytoid)) {
         }
         if ($countdeleted > 0) {
             $oldmessage->tousrs[] = array(
-                'display' => $countdeleted . ' ' . get_string('deleteduser1', 'module.multirecipientnotification', $countdeleted),
+                'display' => $countdeleted . ' ' . get_string('deleteduser1', 'module.multirecipientnotification'),
                 'link' => null,
             );
         }
@@ -155,7 +156,7 @@ if (!is_null($replytoid)) {
     }
     // just in case, someone calls with replyto and returnto=view, which shouldn't
     // happen anyway. But in that case, proceed to first user in recipient-list
-    if (count($users) > 1) {
+    if (sizeof($users) > 1) {
         $user = $users[0];
     }
 }

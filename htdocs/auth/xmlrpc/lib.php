@@ -194,6 +194,7 @@ class AuthXmlrpc extends Auth {
             //$institution = new Institution($peer->institution);
             $user->expiry             = null;
             $user->expirymailsent     = 0;
+            $user->lastlogin          = time();
 
             $user->firstname          = $remoteuser->firstname;
             $user->lastname           = $remoteuser->lastname;
@@ -246,6 +247,9 @@ class AuthXmlrpc extends Auth {
 
             $locked = $this->import_user_settings($user, $remoteuser);
             $locked = array_merge($imported, $locked);
+
+            $user->lastlastlogin      = $user->lastlogin;
+            $user->lastlogin          = time();
 
             //TODO: import institution's per-user-quota?:
             //$user->quota              = $userrecord->quota;
@@ -956,10 +960,7 @@ class PluginAuthXmlrpc extends PluginAuth {
         $peer->institution          = $values['institution'];
         if (isset($values['publickey'])) {
             $peer->publickey            = new PublicKey($values['publickey'], $peer->wwwroot);
-            $peer->set('publickeyexpires', $peer->publickey->expires);
-        }
-        else {
-            $peer->set('publickeyexpires', $peer->publickey->credentials['validTo_time_t']);
+            $peer->publickeyexpires     = $peer->publickey->expires;
         }
 
         /**
@@ -1034,9 +1035,6 @@ class PluginAuthXmlrpc extends PluginAuth {
             . '?hostwwwroot=' . substr(get_config('wwwroot'), 0, -1) . '&wantsurl=';
     }
 
-    public static function is_deprecated() {
-        return get_string('componentdeprecated', 'auth.xmlrpc');
-    }
 }
 
 /**

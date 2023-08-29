@@ -13,10 +13,12 @@ defined('INTERNAL') || die();
 
 define('MAX_USERNAME_DISPLAY', 30);
 
+require 'phpmailer/src/PHPMailer.php';
+require 'phpmailer/src/Exception.php';
+require 'phpmailer/src/SMTP.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception as phpmailerException;
 use PHPMailer\PHPMailer\SMTP;
-
 /**
  * loads up activity preferences for a given user
  *
@@ -1718,7 +1720,6 @@ function delete_user($userid) {
     delete_records('usr_institution_request', 'usr', $userid);
     delete_records('usr_password_request', 'usr', $userid);
     delete_records('usr_watchlist_view', 'usr', $userid);
-    delete_records('watchlist_queue', 'usr', $userid);
     delete_records('view_access', 'usr', $userid);
     delete_records('usr_roles', 'usr', $userid);
     delete_records('usr_login_data', 'usr', $userid);
@@ -3090,35 +3091,6 @@ function install_system_dashboard_view() {
     }
     return $view->get('id');
 }
-
-/**
- * This function installs the site's default activity view for outcome collections in groups
- * @return int view ID
- */
-function install_system_activity_view() {
-    require_once(get_config('libroot') . 'view.php');
-    $viewid = get_field('view', 'id', 'institution', 'mahara', 'template', View::SITE_TEMPLATE, 'type', 'activity');
-    if ($viewid) {
-        log_debug('A system activity view already seems to be installed');
-        return $viewid;
-    }
-    require_once(get_config('docroot') . 'blocktype/lib.php');
-    $view = View::create(array(
-        'type'        => 'activity',
-        'institution' => 'mahara',
-        'template'    => View::SITE_TEMPLATE,
-        'numrows'     => 1,
-        'ownerformat' => View::FORMAT_NAME_PREFERREDNAME,
-        'title'       => get_string('activitypage', 'collection'),
-        'description' => get_string('activitypagedescription'),
-        'lockblocks'  => 1,
-    ), 0);
-    $view->set_access(array(array(
-        'type' => 'loggedin'
-    )));
-    return $view->get('id');
-}
-
 
 
 /**

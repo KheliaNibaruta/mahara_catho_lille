@@ -10,7 +10,7 @@
  *
  */
 
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('INTERNAL', 1);
 define('MENUITEM', 'engage/index');
 define('MENUITEM_SUBPAGE', 'members');
@@ -63,7 +63,6 @@ $form = pieform(array(
 ));
 
 $smarty = smarty();
-setpageicon($smarty, 'icon-user');
 $smarty->assign('subheading', get_string('sendinvitations', 'group'));
 $smarty->assign('form', $form);
 $smarty->display('group/form.tpl');

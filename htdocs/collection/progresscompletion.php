@@ -13,7 +13,7 @@
  *
  */
 
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('INTERNAL', 1);
 define('SECTION_PLUGINTYPE', 'core');
 define('SECTION_PLUGINNAME', 'collection');
@@ -182,10 +182,7 @@ if ($collection) {
             array_unshift($viewnav, $collection->collection_nav_framework_option());
         }
         array_unshift($viewnav, $collection->collection_nav_progresscompletion_option());
-        if ($collection->has_outcomes()) {
-            array_unshift($viewnav, $collection->collection_nav_outcomes_option());
-        }
-        $smarty->assign('collectionnav', $viewnav);
+        $smarty->assign('collection', $viewnav);
     }
     $smarty->assign('collectiontitle', $collection->get('name'));
 }

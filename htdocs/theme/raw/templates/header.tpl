@@ -143,7 +143,7 @@
         {include file="header/pageheader.tpl"}
     {elseif $headertype == "profile"}
         {include file="header/profileheader.tpl"}
-    {elseif $headertype == "matrix" || $headertype == "progresscompletion" || $headertype == "outcomeoverview"}
+    {elseif $headertype == "matrix" || $headertype == "progresscompletion"}
         {include file="header/matrixheader.tpl"}
     {/if}
 
@@ -194,7 +194,7 @@
                                 </span>
                                 {if $PAGEHELPNAME}<span class="page-help-icon">{$PAGEHELPICON|safe}</span>{/if}
                                 {if $publicgroup && $rsswithtitle}
-                                <a href="{$feedlink}" class="mahara-rss-icon float-end" role="presentation" aria-hidden="true">
+                                <a href="{$feedlink}" class="mahara-rss-icon text-small float-end " role="presentation" aria-hidden="true">
                                     <span class="icon-rss icon icon-lg" role="presentation" aria-hidden="true"></span>
                                 </a>
                                 {/if}

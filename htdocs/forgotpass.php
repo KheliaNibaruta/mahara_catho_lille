@@ -10,7 +10,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('SECTION_PLUGINTYPE', 'core');
 define('SECTION_PLUGINNAME', 'site');
 define('SECTION_PAGE', 'forgotpass');
@@ -50,7 +50,6 @@ if ($SESSION->get('forgotpasskey')) {
                 'title' => get_string('password'),
                 'description' => get_password_policy_description('user'),
                 'showstrength' => true,
-                'toggledisplay' => true,
                 'rules' => array(
                     'required' => true
                 )
@@ -58,7 +57,6 @@ if ($SESSION->get('forgotpasskey')) {
             'password2' => array(
                 'type' => 'password',
                 'title' => get_string('confirmpassword'),
-                'toggledisplay' => true,
                 'rules' => array(
                     'required' => true
                 )

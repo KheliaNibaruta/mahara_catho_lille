@@ -26,7 +26,7 @@ if ($collectionid = param_integer('collection', null)) {
     $collection = new Collection($collectionid);
     $views = $collection->views();
     if (empty($views)) {
-        $SESSION->add_error_msg(get_string('emptycollectionnoeditaccess1', 'collection'));
+        $SESSION->add_error_msg(get_string('emptycollectionnoeditaccess', 'collection'));
         redirect('/collection/views.php?id=' . $collectionid);
     }
     // Pick any old view, they all have the same access records.
@@ -46,7 +46,7 @@ if (empty($collection)) {
 }
 
 $in_editor = param_integer('editor', 0);
-$viewtitle = $in_editor ? $view->get('title') : get_string('share', 'view');
+$viewtitle = $in_editor ? $view->get('title') : get_string('editaccess', 'view');
 define('TITLE', $viewtitle);
 
 $group = $view->get('group');
@@ -61,13 +61,6 @@ if ($group && !group_within_edit_window($group)) {
 }
 if ($view->get('template') == View::SITE_TEMPLATE) {
     throw new AccessDeniedException();
-}
-
-if ($group) {
-    $groupobj = get_group_by_id($group);
-    if (group_deny_access($groupobj, 'member')) {
-        throw new AccessDeniedException();
-    }
 }
 
 $form = array(
@@ -133,8 +126,7 @@ $form['elements']['more'] = array(
             'type'         => 'switchbox',
             'title'        => get_string('allowcopying', 'view'),
             'description'  => get_string('templatedescriptionplural3', 'view'),
-            'defaultvalue' => !is_outcomes_group($group) && $view->get('template'),
-            'disabled'     => is_outcomes_group($group),
+            'defaultvalue' => $view->get('template'),
         ),
     ),
 );
@@ -823,7 +815,6 @@ $smarty = smarty(
     array('sidebars' => false)
 );
 $smarty->assign('INLINEJAVASCRIPT', $js);
-setpageicon($smarty, 'icon-share-nodes');
 $smarty->assign('form', $form);
 $smarty->assign('shareurl', $shareurl);
 $smarty->assign('group', $group);

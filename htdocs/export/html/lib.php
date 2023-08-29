@@ -540,7 +540,6 @@ class PluginExportHtml extends PluginExport {
             $smarty->assign('viewdescription', $view->get('description'));
             if ($this->exporttype != 'pdflite') {
                 $smarty->assign('viewinstructions', $view->get('instructions'));
-                $smarty->assign('signoff', $view->has_signoff() ? $view->get_signoff_verify_form(true) : '');
             }
 
             if ($this->exportingoneview) {
@@ -933,7 +932,7 @@ class PluginExportHtml extends PluginExport {
 */
     private function get_resume_field_modals(&$idarray, BlockInstance $bi) {
         $configdata = $bi->get('configdata');
-        if (isset($configdata['artefactid']) && !empty($configdata['artefactid'])) {
+        if (isset($configdata['artefactid'])) {
             $field = $bi->get_artefact_instance($configdata['artefactid']);
             $attachmentids = array();
             if ($attachment = $field->get_attachments()) {
@@ -1119,7 +1118,7 @@ private function get_folder_modals(&$idarray, BlockInstance $bi) {
         // Copy over bootstrap and jquery files
         $jsdir =  $staticdir . 'theme/' . $theme . '/static/js/';
         $directoriestocopy[get_config('docroot') . 'js/popper/popper.min.js'] = $jsdir . 'popper.min.js';
-        $directoriestocopy[get_config('docroot') . 'node_modules/bootstrap/dist/js/bootstrap.min.js'] = $jsdir . 'bootstrap.min.js';
+        $directoriestocopy[get_config('docroot') . 'lib/bootstrap/assets/javascripts/bootstrap.min.js'] = $jsdir . 'bootstrap.min.js';
         $directoriestocopy[get_config('docroot') . 'js/jquery/jquery.js'] = $jsdir . 'jquery.js';
         $directoriestocopy[get_config('docroot') . 'js/gridstack/gridstack_modules'] = $jsdir . 'gridstack_modules';
         $directoriestocopy[get_config('docroot') . 'js/gridlayout.js'] = $jsdir . 'gridlayout.js';

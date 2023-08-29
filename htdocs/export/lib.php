@@ -349,7 +349,7 @@ abstract class PluginExport extends Plugin implements IPluginExport {
             safe_require('artefact', $plugin->name);
             $classname = generate_class_name('artefact', $plugin->name);
             if (is_callable($classname . '::exclude_artefacts_in_export')) {
-                if ($artefacts = $classname::exclude_artefacts_in_export($userid)) {
+                if ($artefacts = call_static_method($classname, 'exclude_artefacts_in_export', $userid)) {
                     $artefactsnotincluded = array_unique(array_merge($artefactsnotincluded, $artefacts));
                 }
             }
@@ -495,7 +495,7 @@ abstract class PluginExport extends Plugin implements IPluginExport {
             safe_require('artefact', $plugin->name);
             $classname = generate_class_name('artefact', $plugin->name);
             if (is_callable($classname . '::view_export_extra_artefacts')) {
-                if ($artefacts = $classname::view_export_extra_artefacts(array_keys($this->views))) {
+                if ($artefacts = call_static_method($classname, 'view_export_extra_artefacts', array_keys($this->views))) {
                     $extra = array_unique(array_merge($extra, $artefacts));
                 }
             }
@@ -521,7 +521,7 @@ abstract class PluginExport extends Plugin implements IPluginExport {
             safe_require('artefact', $plugin->name);
             $classname = generate_class_name('artefact', $plugin->name);
             if (is_callable($classname . '::artefact_export_extra_artefacts')) {
-                if ($artefacts = $classname::artefact_export_extra_artefacts($artefactids)) {
+                if ($artefacts = call_static_method($classname, 'artefact_export_extra_artefacts', $artefactids)) {
                     $extra = array_unique(array_merge($extra, $artefacts));
                 }
             }
@@ -1053,22 +1053,6 @@ function is_collection_in_export_queue($collection_id) {
  */
 function is_content_in_export_queue($thing, $id) {
     return (bool) count_records('export_queue_items', $thing, $id);
-}
-
-/**
- * Check if an export_queue item has failed to export
- *
- * @param string $type     Either 'view' or 'collection'
- * @param string $id       The id for the $type
- * @param string $ownerid  The id of the owner
- *
- * @return boolean  True if the thing is in the export queue and failed to export.
- */
-function has_export_failed($type, $id, $ownerid) {
-    return (bool) record_exists_sql("
-        SELECT starttime FROM {export_queue} e
-        JOIN {export_queue_items} ei ON ei.exportqueueid = e.id
-        WHERE e.starttime IS NOT NULL AND e.usr = ? AND ei." . $type . " = ?", array($ownerid, $id));
 }
 
 class PluginExportAll extends PluginExport {

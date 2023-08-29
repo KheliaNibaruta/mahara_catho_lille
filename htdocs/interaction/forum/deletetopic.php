@@ -132,7 +132,6 @@ function deletetopic_submit(Pieform $form, $values) {
 $poster = new User();
 $poster->find_by_id($topic->poster);
 $smarty = smarty();
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('forum', $topic->title);
 $smarty->assign('subheading', TITLE);
 $smarty->assign('topic', $topic);

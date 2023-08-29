@@ -462,10 +462,7 @@ function contextualHelp(formName, helpName, pluginType, pluginName, page, sectio
         'plugintype': pluginType,
         'pluginname': pluginName
     };
-    // We may need to allow overflow on the gridstack item to see the contextual help file
-    if (jQuery(ref).closest('.grid-stack-item-content').length) {
-        jQuery(ref).closest('.grid-stack-item-content')[0].style.setProperty('overflow', 'visible', 'important');
-    }
+
     contextualHelpLink = jQuery(ref);
 
     // deduce the key
@@ -1306,37 +1303,6 @@ $(function() {
     });
 });
 
-function disable_copy_links() {
-    // Make copy view links 'processing' on click
-    // to avoid double clicking
-    $('a[href*="view/copy.php"]').on('click', function(event) {
-        event.preventDefault();
-        if (event.currentTarget.id == 'copyview-button' && event.currentTarget.href.match(/collection=(.*)/)) {
-            // Let it fall thru to copy modal in viewmenu.js
-        }
-        else {
-            let info = $(this);
-            let infoicon = '';
-            if ($(this).parent().hasClass('dropdown-item')) {
-                $(this).parent().addClass('disabled');
-                infoicon = $(this).find('span.icon');
-            }
-            else {
-                $(this).addClass('disabled');
-                infoicon = $(this).find('span.icon').css('padding-right', '0px').css('padding-left', '7px');
-                $(this).css('color', 'black');
-            }
-            info.text('');
-            if (infoicon) {
-                infoicon.removeClass().addClass('icon icon-lg left icon-spinner icon-pulse');
-                info.append(infoicon[0]);
-            }
-            info.append(document.createTextNode(get_string('processing') + ' ...'));
-            window.location.href = $(this).prop('href');
-        }
-    });
-};
-
 /**
  * Offset html anchors for fixed header
  */
@@ -1364,10 +1330,6 @@ jQuery(function($) {
             $('a' + this.hash).attr('tabindex', 0).focus();
         }
     });
-});
-
-jQuery(window).on('blocksloaded', function() {
-    disable_copy_links();
 });
 
 /**
@@ -1420,18 +1382,3 @@ const maharaui = {
         UP:38
     }
 };
-
-// Constants for GRIDSTACK, please match up with BlockInstance::GRIDSTACK_CONSTANTS
-const GRIDSTACK_CONSTANTS = {
-    desktopWidth: 12, // used to be 4
-    mobileWidth: 1,
-    defaultHeight: 3
-}
-
-function submitConfirm() {
-    jQuery('[data-confirm]').off('click');
-    jQuery('[data-confirm]').on('click', function() {
-        var content = jQuery(this).attr('data-confirm');
-        return confirm(content);
-    });
-}

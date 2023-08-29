@@ -250,8 +250,8 @@ function activitylistin_html($type='all', $limit=10, $offset=0) {
             }
             if ($deletedcount > 0) {
                 $record->tousr[] = array(
-                    'username' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification', $deletedcount),
-                    'display' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification', $deletedcount),
+                    'username' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification'),
+                    'display' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification'),
                     'link' => null,
                 );
             }
@@ -270,7 +270,7 @@ function activitylistin_html($type='all', $limit=10, $offset=0) {
                 $record->fromusr = $record->fromid;
                 $fromuser = get_user($record->fromid);
                 $record->fromusrlink = false;
-                if (empty($fromuser->deleted)) {
+                if ($fromuser->deleted === '0') {
                     $record->canreply = true;
                     $record->fromusrlink = profile_url($record->fromid);
                 }
@@ -623,8 +623,8 @@ function activitylistout_html($type='all', $limit=10, $offset=0) {
             }
             if ($deletedcount > 0) {
                 $record->tousr[] = array(
-                    'username' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification', $deletedcount),
-                    'display' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification', $deletedcount),
+                    'username' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification'),
+                    'display' => $deletedcount . ' ' . get_string('deleteduser1', 'module.multirecipientnotification'),
                     'link' => null,
                 );
             }

@@ -57,8 +57,7 @@ CCEND=$(shell echo "\033[0m")
 .PHONY: css clean-css help imageoptim installcomposer initcomposer cleanssphp ssphp \
 		cleanpdfexport pdfexport install phpunit behat minaccept jenkinsaccept securitycheck \
 		push security docker-image docker-images docker-builder reload hard-reload \
-		docker-bash docker-bash-root phpstan-analyze psa initcomposerexternal \
-		initcomposermahara initchangeidcommitmsg
+		docker-bash docker-bash-root phpstan-analyze psa
 
 all: css
 
@@ -88,7 +87,8 @@ endif
 
 ifndef npmsetup
 	@echo "System node version: " && node -v;
-	@$(nvm_check) && nvm ls && npm install && cd htdocs && npm install
+	@$(nvm_check) && nvm ls
+	@$(nvm_check) && npm install
 endif
 	@echo "Building CSS..."
 	@if $(nvm_check) && npm rebuild node-sass && gulp css --production $(production) ; then echo "Done!"; else $(nvm_check) && npm rebuild node-sass && npm install; gulp css --production $(production);  fi
@@ -112,13 +112,11 @@ help:
 	@echo "Helper targets"
 	@echo "=============="
 	@echo "Run 'make initcomposer' to install Composer and phpunit"
-	@echo "Run 'make initcomposerdev' to install Composer development tools"
 	@echo "Run 'make phpunit' to execute phpunit tests"
 	@echo "Run 'make install' runs the Mahara install script"
 	@echo "Run 'make behat' to execute behat tests"
 	@echo "Run 'make ssphp' to install SimpleSAMLphp"
 	@echo "Run 'make cleanssphp' to remove SimpleSAMLphp"
-	@echo "Run 'make cleancomposer' to remove the Composer vendor directories"
 	@echo "Run 'make imageoptim' to losslessly optimise all images"
 	@echo "Run 'make docker-image' to build a Mahara docker image"
 	@echo "Run 'make docker-builder' builds the docker builder image required for docker-build"
@@ -132,10 +130,6 @@ imageoptim:
 
 composer := $(shell ls external/composer.phar 2>/dev/null)
 
-cleancomposer:
-	rm -rf htdocs/vendor/
-	rm -rf external/vendor/
-
 installcomposer:
 ifdef composer
 	@echo "Composer already installed..."
@@ -144,35 +138,9 @@ else
 	@curl -sS https://getcomposer.org/installer | php -- --install-dir=external
 endif
 
-initcomposerdev: installcomposer initcomposerexternal initcomposermahara initchangeidcommitmsg
-
-initcomposerexternal:
-	@echo "Updating external dependencies with Composer for development..."
-	@php external/composer.phar --working-dir=external update
-
-initcomposermahara:
-	@echo "Installing third-party dependencies with Composer for development..."
-	@php external/composer.phar install
-
-initchangeidcommitmsg: initcomposerexternal
-	@echo "Appending our Change-Id commit-msg hook if needed"
-ifeq ("Change-Id",$(findstring Change-Id,$(shell cat .git/hooks/commit-msg)))
-	@echo "Change-Id hook already installed";
-else
-	@echo "Installing Change-Id hook";
-	@echo >> .git/hooks/commit-msg
-	@scp -p -P 29418 ${USER}@reviews.mahara.org:hooks/commit-msg .git/hooks/commit-msg.id.tmp
-	@cat .git/hooks/commit-msg.id.tmp >> .git/hooks/commit-msg
-	@rm .git/hooks/commit-msg.id.tmp
-endif
-
 initcomposer: installcomposer
-	@echo "Removing htdocs/vendor directory so that we can rebuild it fresh"
-	rm -rf htdocs/vendor
 	@echo "Updating external dependencies with Composer..."
 	@php external/composer.phar --working-dir=external update
-	@echo "Installing third-party dependencies with Composer..."
-	@php external/composer.phar install --no-dev
 
 simplesamlphp := $(shell ls -d htdocs/auth/saml/extlib/simplesamlphp 2>/dev/null)
 
@@ -185,7 +153,7 @@ ifdef simplesamlphp
 	@echo "SimpleSAMLphp already exists - doing nothing"
 else
 	@echo "Pulling SimpleSAMLphp from download ..."
-	@curl -sSL https://github.com/simplesamlphp/simplesamlphp/releases/download/v1.19.7/simplesamlphp-1.19.7.tar.gz | tar  --transform 's/simplesamlphp-[0-9]+\.[0-9]+\.[0-9]+/simplesamlphp/x1' -C htdocs/auth/saml/extlib -xzf - # SimpleSAMLPHP release tarball already has all composer dependencies.
+	@curl -sSL https://github.com/simplesamlphp/simplesamlphp/releases/download/v1.19.5/simplesamlphp-1.19.5.tar.gz | tar  --transform 's/simplesamlphp-[0-9]+\.[0-9]+\.[0-9]+/simplesamlphp/x1' -C htdocs/auth/saml/extlib -xzf - # SimpleSAMLPHP release tarball already has all composer dependencies.
 	@php append_composer.php htdocs/auth/saml/extlib/simplesamlphp/composer.json simplesamlphp/composer-module-installer
 	@php external/composer.phar --working-dir=htdocs/auth/saml/extlib/simplesamlphp require predis/predis
 	@echo "Copying www/resources/* files to sp/resources/ ..."
@@ -240,7 +208,7 @@ behat:
 
 revision := $(shell git rev-parse --verify HEAD 2>/dev/null)
 whitelist := $(shell grep / test/WHITELIST | xargs -I entry find entry -type f | xargs -I file echo '! -path ' file 2>/dev/null)
-mergebase := $(shell git fetch gerrit >/dev/null 2>&1 && git merge-base HEAD gerrit/main)
+mergebase := $(shell git fetch gerrit >/dev/null 2>&1 && git merge-base HEAD gerrit/22.10_DEV)
 breakpoints := $(shell git diff-tree --diff-filter=ACM --no-commit-id -r -z -p $(mergebase) HEAD test/behat/features :^test/behat/features/manual_checks |  grep "I insert breakpoint")
 
 minaccept:
@@ -281,25 +249,25 @@ securitycheck:
 push: securitycheck minaccept
 	@echo "Pushing the change upstream ..."
 	@if test -z "$(TAG)"; then \
-		git push gerrit HEAD:refs/for/main; \
+		git push gerrit HEAD:refs/for/22.10_DEV; \
 	else \
-		git push gerrit HEAD:refs/for/main -o topic=$(TAG); \
+		git push gerrit HEAD:refs/for/22.10_DEV -o topic=$(TAG); \
 	fi
 
 wip: securitycheck
 	@echo "Pushing the change upstream as WIP ..."
 	@if test -z "$(TAG)"; then \
-		git push gerrit HEAD:refs/for/main%wip; \
+		git push gerrit HEAD:refs/for/22.10_DEV%wip; \
 	else \
-		git push gerrit HEAD:refs/for/main%wip -o topic=$(TAG); \
+		git push gerrit HEAD:refs/for/22.10_DEV%wip -o topic=$(TAG); \
 	fi
 
 security: minaccept
 	@echo "Pushing the SECURITY change upstream ..."
 	@if test -z "$(TAG)"; then \
-		git push gerrit HEAD:refs/for/main%private; \
+		git push gerrit HEAD:refs/for/22.10_DEV%private; \
 	else \
-		git push gerrit HEAD:refs/for/main%private -o topic=$(TAG); \
+		git push gerrit HEAD:refs/for/22.10_DEV%private -o topic=$(TAG); \
 	fi
 	ssh $(sshargs) gerrit set-reviewers --add \"Mahara Security Managers\" -- $(sha1chain)
 

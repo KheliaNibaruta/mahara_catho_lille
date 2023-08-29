@@ -48,8 +48,8 @@ Feature: Mahara users submit pages / colelctions to a group
     And I select "Collection UserA_01" from "Submit for assessment"
     And I click on "Submit"
     And I click on "Yes"
-    Then I should see "Portfolio submitted"
-    And I click on "view your submission"
+    Then I should see "Collection submitted"
+    And I click on "Collection UserA_01"
     And I click on "Details"
     And I should not see "Quick edit"
     And I log out
@@ -62,12 +62,12 @@ Feature: Mahara users submit pages / colelctions to a group
     And I select "Page UserB_02" from "Submit for assessment"
     And I click on "Submit"
     And I click on "Yes"
-    Then I should see "Portfolio submitted"
+    Then I should see "Page submitted"
     And I log out
 
     # UserC didn't submit anything so should appear on the need to do submissions list
     Given I log in as "groupAdmin" with password "Kupuh1pa!"
     And I choose "Groups" in "Engage" from main menu
     When I click on "GroupA"
-    And I scroll to the base of id "nosubmissionslist"
+    And I scroll to the base of id "groupviewlist"
     Then I should see "Cecilia User" in the "Members without a submission to the group" "Groups" property

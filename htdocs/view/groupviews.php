@@ -10,7 +10,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('MENUITEM', 'engage/index');
 define('MENUITEM_SUBPAGE', 'views');
 define('SECTION_PLUGINTYPE', 'core');
@@ -68,9 +68,6 @@ if (!$can_edit) {
                 if ($collobj->has_progresscompletion()) {
                     $item['progresscompletion'] = $collobj->collection_nav_progresscompletion_option();
                 }
-                if ($collobj->has_outcomes()) {
-                    $item['outcomes'] = $collobj->collection_nav_outcomes_option();
-                }
             }
         }
     }
@@ -110,19 +107,9 @@ jQuery(function ($) {
 EOF;
 
 $urlparamsstr = '';
-$outcomesgroup = false;
 if (!empty($group->id)) {
     $urlparams['group'] = $group->id;
     $urlparamsstr = '&' . http_build_query($urlparams);
-    $outcomesgroup = is_outcomes_group($group->id);
-}
-
-$data->data = $data->data ?: new StdClass();
-foreach ($data->data as $portfolioindex => $portfolio) {
-    // Make sure empty collection has collection object associated with it
-    if (empty($portfolio['collection']) && !empty($portfolio['collid'])) {
-        $data->data[$portfolioindex]['collection'] = new Collection($portfolio['collid']);
-    }
 }
 
 $smarty = smarty(array('paginator'));
@@ -141,8 +128,6 @@ $smarty->assign('query', param_variable('query', null));
 $smarty->assign('querystring', get_querystring());
 $smarty->assign('sitetemplate', View::SITE_TEMPLATE);
 $smarty->assign('editlocked', $role == 'admin');
-$smarty->assign('role', $role);
-$smarty->assign('outcomesgroup', $outcomesgroup);
 $html = $smarty->fetch('view/indexresults.tpl');
 $smarty->assign('viewresults', $html);
 $smarty->assign('searchform', $searchform);

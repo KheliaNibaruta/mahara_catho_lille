@@ -11,7 +11,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('MENUITEM', 'engage/index');
 define('MENUITEM_SUBPAGE', 'forums');
 define('SECTION_PLUGINTYPE', 'interaction');
@@ -159,8 +159,7 @@ if ($posts) {
             $post->filecount = count($post->attachments);
             safe_require('artefact', 'file');
             foreach ($post->attachments as $file) {
-                $classname = generate_artefact_class_name($file->artefacttype);
-                $file->icon = $classname::get_icon(array('id' => $file->id, 'post' => $post->id));
+                $file->icon = call_static_method(generate_artefact_class_name($file->artefacttype), 'get_icon', array('id' => $file->id, 'post' => $post->id));
             }
         }
     }
@@ -248,7 +247,6 @@ if ($publicgroup) {
 
 
 $smarty = smarty(array(), $headers);
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('topic', $topic);
 $smarty->assign('membership', $membership);
 $smarty->assign('moderator', $moderator);

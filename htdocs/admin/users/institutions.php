@@ -207,30 +207,6 @@ if ($institution || $add) {
             }
             delete_records('site_content_version', 'institution', $values['i']);
             delete_records('oauth_server_registry', 'institution', $values['i']);
-            if (db_table_exists('outcome')) {
-                if ($outcome_categories = get_column('outcome_category', 'id', 'institution', $values['i'])) {
-                    foreach ($outcome_categories as $category) {
-                        if ($outcome_collections = get_column_sql("SELECT id FROM {collection} WHERE outcomecategory = ?", array($category))) {
-                            foreach ($outcome_collections as $oc_ids) {
-                                $collection = new Collection($oc_ids);
-                                $collection->delete();
-                            }
-                        }
-                        if ($outcome_types = get_column('outcome_type', 'id', 'outcome_category', $category)) {
-                            foreach ($outcome_types as $type) {
-                                delete_records('outcome_type', 'id', $type);
-                            }
-                        }
-                        delete_records('outcome_category', 'id', $category);
-                    }
-                }
-                if ($outcome_subjects = get_column('outcome_subject_category', 'id', 'institution', $values['i'])) {
-                    foreach ($outcome_subjects as $subject) {
-                        delete_records('outcome_subject', 'outcome_subject_category', $subject);
-                        delete_records('outcome_subject_category', 'id', $subject);
-                    }
-                }
-            }
             delete_records('institution', 'name', $values['i']);
             db_commit();
             clear_menu_cache();
@@ -278,7 +254,6 @@ if ($institution || $add) {
         $data->allowpeersviewcontent = get_config_institution($institution, 'allowpeersviewcontent');
         $data->reviewselfdeletion = get_config_institution($institution, 'reviewselfdeletion');
         $data->progresscompletion = get_config_institution($institution, 'progresscompletion');
-        $data->outcomeportfolio = get_config_institution($institution, 'outcomeportfolio');
         $data->showonlineusers = (is_isolated() && $data->showonlineusers == 2 ? 1 : $data->showonlineusers);
         $data->maxgroups = get_config_institution($institution, 'maxgroups');
         $lockedprofilefields = (array) get_column('institution_locked_profile_field', 'profilefield', 'name', $institution);
@@ -316,7 +291,6 @@ if ($institution || $add) {
         $data->allowpeersviewcontent = 0;
         $data->allowinstitutionsmartevidence = 0;
         $data->progresscompletion = 0;
-        $data->outcomeportfolio = 0;
         $data->tags = 0;
         $data->licensemandatory = 0;
         $data->licensedefault = '';
@@ -660,20 +634,15 @@ if ($institution || $add) {
             );
         }
     }
-    $elements['progresscompletion'] = array(
-        'type'         => 'switchbox',
-        'title'        => get_string('progresscompletion', 'admin'),
-        'description'  => get_string('progresscompletiondescription','admin'),
-        'defaultvalue' => isset($data->progresscompletion) && $data->progresscompletion,
-        'help'         => true,
-    );
-    $elements['outcomeportfolio'] = array(
-        'type'         => 'switchbox',
-        'title'        => get_string('outcomeportfolio', 'admin'),
-        'description'  => get_string('outcomeportfoliodescription','admin'),
-        'defaultvalue' => isset($data->outcomeportfolio) && $data->outcomeportfolio,
-        'help'         => true,
-    );
+    if (is_plugin_active('signoff', 'blocktype')) {
+        $elements['progresscompletion'] = array(
+          'type'         => 'switchbox',
+          'title'        => get_string('progresscompletion', 'admin'),
+          'description'  => get_string('progresscompletiondescription','admin'),
+          'defaultvalue' => isset($data->progresscompletion) && $data->progresscompletion,
+          'help'         => true,
+        );
+    }
     $elements['allowinstitutionsmartevidence'] = array(
         'type'         => 'switchbox',
         'title'        => get_string('allowinstitutionsmartevidence1', 'admin'),
@@ -1075,7 +1044,6 @@ function institution_submit(Pieform $form, $values) {
     $newinstitution->allowinstitutionsmartevidence  = (isset($values['allowinstitutionsmartevidence']) && $values['allowinstitutionsmartevidence']) ? 1 : 0;
     $newinstitution->tags  = (isset($values['allowinstitutiontags']) && $values['allowinstitutiontags']) ? 1 : 0;
     $newinstitution->progresscompletion  = (isset($values['progresscompletion']) && $values['progresscompletion']) ? 1 : 0;
-    $newinstitution->outcomeportfolio  = (isset($values['outcomeportfolio']) && $values['outcomeportfolio']) ? 1 : 0;
 
     // do not set 'reviewselfdeletion' if it has never been changed at institution level
     // and the value is the same as site setting 'defaultreviewselfdeletion'

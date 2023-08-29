@@ -235,8 +235,7 @@ function group_role_can_moderate_views($group, $role) {
     if (!isset($moderatingroles[$group])) {
         $grouptype = get_field('group', 'grouptype', 'id', $group);
         safe_require('grouptype', $grouptype);
-        $classname = 'GroupType' . ucfirst($grouptype);
-        $moderatingroles[$group] = $classname::get_view_moderating_roles();
+        $moderatingroles[$group] = call_static_method('GroupType' . ucfirst($grouptype), 'get_view_moderating_roles');
     }
 
     return in_array($role, $moderatingroles[$group]);
@@ -815,8 +814,7 @@ function group_update($new, $create=false) {
 
     // When the group type changes, make sure everyone has a valid role.
     safe_require('grouptype', $new->grouptype);
-    $classname = 'GroupType' . ucfirst($new->grouptype);
-    $allowedroles = $classname::get_roles();
+    $allowedroles = call_static_method('GroupType' . ucfirst($new->grouptype), 'get_roles');
     set_field_select(
         'group_member', 'role', 'member',
         '"group" = ? AND NOT role IN (' . join(',', array_fill(0, count($allowedroles), '?')) . ')',
@@ -1665,13 +1663,13 @@ function group_view_submission_form($groupid) {
     }
 
     foreach ($collections as $c) {
-        if (empty($c['submittedgroup']) && empty($c['submittedhost']) && empty($c['submissionoriginal'])) {
+        if (empty($c['submittedgroup']) && empty($c['submittedhost'])) {
             $collectionoptions['c:' . $c['id']] = $c['name'];
         }
     }
 
     foreach ($views as $v) {
-        if ($v['type'] != 'profile' && empty($v['submittedgroup']) && empty($v['submittedhost']) && empty($v['submissionoriginal'])) {
+        if ($v['type'] != 'profile' && empty($v['submittedgroup']) && empty($v['submittedhost'])) {
             $viewoptions['v:' . $v['id']] = $v['name'];
         }
     }
@@ -2125,11 +2123,9 @@ function group_get_grouptype_options($currentgrouptype=null) {
     }
     foreach ($grouptypes as $grouptype) {
         safe_require('grouptype', $grouptype);
-        $classname = 'GroupType' . ucfirst($grouptype);
-        if ($classname::can_be_created_by_user()) {
+        if (call_static_method('GroupType' . $grouptype, 'can_be_created_by_user')) {
             $roles = array();
-            $grouptyperoles = $classname::get_roles();
-            foreach ($grouptyperoles as $role) {
+            foreach (call_static_method('GroupType' . $grouptype, 'get_roles') as $role) {
                 $roles[] = get_string($role, 'grouptype.' . $grouptype);
             }
             $groupoptions[$grouptype] = get_string('name', 'grouptype.' . $grouptype) . ': ' . join(', ', $roles);
@@ -2213,8 +2209,7 @@ function group_get_menu_tabs() {
     if ($interactionplugins = plugins_installed('interaction')) {
         foreach ($interactionplugins as $plugin) {
             safe_require('interaction', $plugin->name);
-            $classname = generate_class_name('interaction', $plugin->name);
-            $plugin_menu = $classname::group_menu_items($group);
+            $plugin_menu = call_static_method(generate_class_name('interaction', $plugin->name), 'group_menu_items', $group);
             $menu = array_merge($menu, $plugin_menu);
         }
     }
@@ -2227,7 +2222,7 @@ function group_get_menu_tabs() {
         'title' => get_string('Viewscollections1', 'view'),
         'weight' => 50,
     );
-    if (group_role_can_edit_views($group, $role) && !(is_outcomes_group($group->id) && $role === 'member')) {
+    if (group_role_can_edit_views($group, $role)) {
         $menu['share'] = array(
             'path' => 'groups/share',
             'url' => 'group/shareviews.php?group='.$group->id,
@@ -2239,9 +2234,13 @@ function group_get_menu_tabs() {
     foreach (plugin_types_installed() as $plugin_type_installed) {
         foreach (plugins_installed($plugin_type_installed) as $plugin) {
             safe_require($plugin_type_installed, $plugin->name);
-            $classname = generate_class_name($plugin_type_installed, $plugin->name);
-            if (method_exists($classname,'group_tabs')) {
-                $plugin_menu = $classname::group_tabs($group->id, $role);
+            if (method_exists(generate_class_name($plugin_type_installed, $plugin->name),'group_tabs')) {
+                $plugin_menu = call_static_method(
+                      generate_class_name($plugin_type_installed, $plugin->name),
+                      'group_tabs',
+                      $group->id,
+                      $role
+                );
                 $menu = array_merge($menu, $plugin_menu);
             }
         }
@@ -2714,7 +2713,7 @@ function group_can_create_groups() {
     if ($creators == 'all') {
         return true;
     }
-    if ($USER->get('admin') || $USER->is_institutional_admin() || $USER->is_institutional_supportadmin()) {
+    if ($USER->get('admin') || $USER->is_institutional_admin()) {
         return true;
     }
     return $creators == 'staff' && ($USER->get('staff') || $USER->is_institutional_staff());
@@ -3877,39 +3876,11 @@ function build_group_archived_submissions_results($search, $offset, $limit) {
  * @return boolean
  */
 function group_external_group($group) {
-    if (is_numeric($group)) {
+    if (is_string($group)) {
         $group = get_record('group', 'id', $group);
     }
     if (record_exists('lti_assessment', 'group', $group->id)) {
         return true;
     }
     return false;
-}
-
-/**
- * Check if a group is set as 'Outcomes' group
- *
- * @param string $id  The group ID
- * @return boolean
- */
-function is_outcomes_group($id) {
-    $id = (int)$id;
-    if ($id > 0) {
-        if ($group = get_record('group', 'id', $id)) {
-            return (boolean)($group->grouptype === 'outcomes');
-        }
-    }
-    return false;
-}
-
-
-function group_deny_access($group, $role) {
-    // Can't check so lets deny
-    if (!isset($group->id) || !isset($group->grouptype)) {
-        return true;
-    }
-    safe_require('grouptype', $group->grouptype);
-    $classname = 'GroupType' . ucfirst($group->grouptype);
-    $denyaccess = $classname::deny_access_for_role($group, $role);
-    return $denyaccess;
 }

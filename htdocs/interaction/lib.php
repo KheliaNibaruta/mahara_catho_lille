@@ -343,9 +343,8 @@ function interaction_instance_from_id($id) {
  */
 function edit_interaction_validation(Pieform $form, $values) {
     safe_require('interaction', $values['plugin']);
-    $classname = generate_class_name('interaction', $values['plugin']);
-    if (is_callable($classname::instance_config_validate())) {
-        $classname::instance_config_validate($form, $values);
+    if (is_callable(array(generate_class_name('interaction', $values['plugin'])), 'instance_config_validate')) {
+        call_static_method(generate_class_name('interaction', $values['plugin']), 'instance_config_validate', $form, $values);
     }
 }
 
@@ -367,8 +366,7 @@ function edit_interaction_submit(Pieform $form, $values) {
         $instance->set('group', $values['group']);
     }
     $instance->commit();
-    $classname = generate_class_name('interaction', $values['plugin']);
-    $classname::instance_config_save($instance, $values);
+    call_static_method(generate_class_name('interaction', $values['plugin']), 'instance_config_save', $instance, $values);
     global $SESSION;
     $SESSION->add_ok_msg(get_string('interactionsaved', 'group', get_string('name', 'interaction.' . $values['plugin'])));
     $returnto = param_alpha('returnto', 'view');

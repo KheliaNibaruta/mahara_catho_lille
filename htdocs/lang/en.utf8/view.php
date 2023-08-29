@@ -18,14 +18,14 @@ $string['edittitleanddescription'] = 'Edit title and description';
 $string['editcontent1']            = 'Edit';
 $string['editcontentandlayout']   = 'Edit content and layout';
 $string['editlayout']             = 'Edit layout';
-$string['share']                  = 'Share';
-$string['sharefor1']              = 'Share (ID %s)';
+$string['editaccess']             = 'Edit access';
+$string['editaccessfor']          = 'Edit access (ID %s)';
 $string['layout']                 = 'Layout';
-$string['managesharing']           = 'Manage sharing';
-$string['managesharingfor']        = 'Manage sharing permissions for "%s"';
+$string['manageaccess']           = 'Manage access';
+$string['manageaccessfor']        = 'Manage access for "%s"';
 $string['managekeys']             = 'Manage secret URLs';
 $string['managekeysfor']          = 'Manage secret URLs for "%s"';
-$string['sharingrulesfor']         = 'Sharing rules for "%s"';
+$string['accessrulesfor']         = 'Access rules for "%s"';
 $string['next']                   = 'Next';
 $string['back']                   = 'Back';
 $string['title']                  = 'Page title';
@@ -65,7 +65,6 @@ $string['templateprogress']       = 'Portfolio completion template';
 $string['templateportfolio']      = 'Page template';
 $string['templateportfoliotitle']       = 'Untitled';
 $string['templateportfoliodescription1'] = 'Set up the default layout for the pages that are created. You can also add blocks. Please note that any content you add to the default page will appear on every page that is created after you made the change.';
-$string['templateactivity']      = 'Activity page template';
 
 // my views
 $string['artefacts'] = 'Artefacts';
@@ -111,8 +110,6 @@ $string['collectionsubmittedtogroupgrade'] = 'This collection was submitted to t
 $string['collectionsubmittedtohost'] = 'This collection has been submitted for assessment.';
 $string['collectionsubmittedtohoston'] = 'This collection was submitted on %s.';
 $string['submittedpendingrelease'] = 'Pending release after archiving.';
-$string['submittedpendingreleasefailed'] = 'Release failed to archive.<br>Go to <a href="%s">Export queue</a> to re-queue.';
-$string['submittedstatus'] = 'Submission status';
 $string['nobodycanseethisview2'] = 'Only you can see this page.';
 $string['noviews2'] = 'No portfolios';
 $string['youhavenoviews2'] = 'You don\'t have any portfolios.';
@@ -131,9 +128,6 @@ $string['nosharedviewsyet'] = 'There are no pages shared with this group yet';
 $string['viewssharedtogroupbyothers'] = 'Pages shared with this group by others';
 $string['sharedviews'] = 'Shared pages';
 $string['submissionstogroup'] = 'Submissions to this group';
-$string['viewsourceportfolio'] = 'Original portfolio \'%s\'';
-$string['originalsubmissiondeleted'] = 'Original portfolio deleted';
-$string['showsubmissions'] = 'Show submitted portfolios';
 $string['nosubmittedviewscollectionsyet1'] = 'There are no portfolios submitted to this group yet';
 $string['nosubmissionsfrom'] = 'Members without a submission to the group';
 $string['submittogroup1'] = 'Submit a portfolio to this group';
@@ -232,18 +226,16 @@ $string['shareallwithmaximum'] = array(
     'You can share the selected portfolios with up to 1 person or group of people.',
     'You can share the selected portfolios with up to %d people or groups of people.'
 );
-$string['submitconfirm1'] = 'If you submit \'%s\' to \'%s\', a copy will be made and submitted for assessment. You can continue editing your original portfolio. However, you will not be able to edit the submitted copy until it is released. Are you sure you want to submit your portfolio now?';
-$string['portfoliosubmitted'] = 'Portfolio submitted. You can <a href="%s">view your submission</a>.';
+$string['submitconfirm'] = 'If you submit \'%s\' to %s for assessment, you will not be able to edit its contents until your tutor has finished marking it. Are you sure you want to submit now?';
+$string['viewsubmitted'] = 'Page submitted';
+$string['collectionsubmitted'] = 'Collection submitted';
 $string['viewnotsubmitted'] = 'Portfolio not currently submitted';
 $string['collectionviewsalreadysubmitted'] = "Some pages in this collection have already been submitted: \"%s\"\nYou cannot submit the collection until they have been released, or removed from the collection.";
 $string['viewalreadysubmitted'] = 'This page has already been submitted to another assignment or group.';
 $string['collectionalreadysubmitted'] = 'This collection has already been submitted to another assignment or group.';
 $string['collectionsubmissionexceptiontitle'] = 'Could not submit collection';
 $string['collectionsubmissionexceptionmessage'] = 'This collection cannot be submitted for the following reason:';
-$string['cantsubmitcopyfailed'] = 'A copy of this portfolio could not be created. No submission has been made.';
 $string['cantsubmitemptycollection'] = 'This collection does not contain any pages.';
-$string['cantsubmitneedgrouporsubmittedhost'] = 'Submissions need to be made to a group or to a submitted host.';
-$string['submittedtimetitle'] = '; submitted at %s';
 $string['viewsubmissionexceptiontitle'] = 'Could not submit page';
 $string['viewsubmissionexceptionmessage'] = 'This page cannot be submitted for the following reason:';
 $string['submitviewtogroup'] = 'Submit \'%s\' to \'%s\' for assessment';
@@ -252,7 +244,6 @@ $string['cantsubmitcollectiontogroup'] = 'You cannot submit this collection.';
 $string['cantsubmittogroup'] = 'You cannot submit to this group.';
 
 $string['cantdeleteview'] = 'You cannot delete this page.';
-$string['cantdeleteviewsubmission'] = 'You cannot delete this page while it is a submission.';
 $string['deletespecifiedview'] = 'Delete page "%s"';
 $string['deleteviewconfirm1'] = 'Do you really want to delete this page? It cannot be undone.';
 $string['deleteviewconfirmbackup1'] = 'Please consider creating a backup of this page by <a href="%sexport/index.php?view=%s">exporting</a> it.';
@@ -265,7 +256,7 @@ $string['editaccessgrouppagedescription1'] = 'By default, only those group membe
 $string['editaccessinstitutionpagedescription'] = 'By default, only the administrators of your institution can see your institution collections and pages. ' . $string['editaccessdescription'];
 $string['editaccesssitepagedescription'] = 'By default, only site administrators can see site collections and pages. ' . $string['editaccessdescription'];
 $string['editsecreturlsintable'] = '<strong>Secret URLs</strong> cannot be set on this page as they must be generated individually. To set secret URLs, please return to the <a href="%s">list of collections and pages</a>.';
-$string['editaccessinvalidviewset2'] = 'Attempt to change sharing permissions on an invalid set of portfolios.';
+$string['editaccessinvalidviewset1'] = 'Attempt to edit access on an invalid set of portfolios.';
 
 $string['overridingstartstopdate'] = 'Overriding start/stop dates';
 $string['overridingstartstopdatesdescription'] = 'If you want, you can set an overriding start and/or stop date. Other people will not be able to see your page before the start date and after the end date regardless of any other access you have granted.';
@@ -277,11 +268,7 @@ $string['viewinformationsaved'] = 'Page information saved successfully';
 
 $string['canteditdontown'] = 'You cannot edit this page because you do not own it.';
 $string['canteditsubmitted'] = 'You cannot edit this page because it has been submitted for assessment to "%s". You will have to wait until a tutor releases the page.';
-$string['canteditsubmission'] = 'You cannot edit this page while it is a submission.';
-$string['notsubmitted'] = 'Not submitted';
 $string['Submitted'] = 'Submitted';
-$string['archiving'] = 'Archiving';
-$string['released'] = 'Released';
 $string['submittedforassessment'] = 'Submitted for assessment';
 $string['blocknotinview'] = 'The block with ID "%d" is not in the page.';
 
@@ -597,90 +584,7 @@ $string['deletedview'] = 'Page deleted';
 $string['copylocked'] = 'Copy locked';
 $string['copylockeddescription'] = 'This is a template copy. Change this setting to lock/unlock the instruction fields on this copy.';
 
-$string['linktosubmissionoriginaltitle'] = 'Original portfolio';
-$string['linktosubmissionoriginallink'] = '<a href="%s">%s</a>';
-$string['linktosubmissionoriginaldescription'] = 'This portfolio is a copy made for submission purposes. The link takes you to the original portfolio.';
-$string['linktosubmissionoriginaldeleted'] = 'Deleted';
-$string['linktosubmissionoriginaldeleteddescription'] = 'This portfolio is a copy made for submission purposes. The original portfolio has been deleted.';
-$string['linkedtosourceportfoliotitle'] = 'Submission';
-$string['linkedtosourceportfoliodescription'] = 'Switching this setting to \'No\' removes the association to the original portfolio. You can then use this copy that you made for submission purposes as you would any regular portfolio.';
-$string['linkedtosourceportfoliodescriptioninacollection'] = 'This page is part of a collection that was submitted. Change the submission status in the collection settings for the entire collection.';
-
 $string['canteditcollectionlocked'] = 'Unable to edit the portfolio page because the collection is locked.';
 $string['canteditprogress'] = 'Unable to edit the portfolio completion page because the collection is locked or the page was copied from a template.';
 
 $string['accessdeniedaccesss'] = 'You are not allowed to change the access permissions any more.';
-
-$string['signoff'] = 'Sign-off';
-$string['signoffhelp'] = "Indicate the pages you have completed";
-$string['signoffhelppage'] = "Mark this page as 'Signed off' when you have finished adding all your evidence.";
-$string['signoffdesc'] = 'The portfolio owner can sign off a page when all requirements have been met to indicate that it is ready for assessment.';
-
-$string['verify'] = 'Verify';
-$string['verifydesc1'] = 'Decide whether a manager needs to verify this page as part of the portfolio assessment process.';
-$string['signedoff'] = 'Signed off';
-$string['verified'] = 'Verified';
-
-$string['signoffpagetitle'] = 'Sign-off page';
-$string['signoffpagedesc'] = 'Select "Yes" to sign off this page and indicate that you have met all requirements. Select "No" to abort.';
-$string['signoffpageundodesc'] = 'If you select "Yes", you will remove the signed-off status. That will also remove the verification if that had been part of the assessment work flow. Select "No" to abort.';
-$string['signoffpageconfirm'] = 'Confirm this action?';
-
-$string['verifypagetitle'] = 'Verify page';
-$string['verifypagedesc'] = 'Select "Yes" to verify that the portfolio owner has met all requirements for this page. Select "No" to return to the page without verifying it.';
-
-$string['signoffdetails'] = 'Sign-off details';
-$string['updatesignoff'] = 'Update page sign-off';
-$string['updateverify'] = 'Update page verification';
-$string['viewsignoffdetails'] = 'View sign-off details information';
-$string['readyforverification'] = 'This page is ready for verification.';
-$string['signedoffbyondate'] = '%s signed off this page on %s.';
-$string['verifiedbyondate'] = '%s verified this page on %s.';
-$string['cannoteditaftersignoff'] = 'You cannot update "%s" after page is signed off';
-
-$string['removedverifynotificationsubject'] = 'Verification for %s removed';
-$string['removedverifynotification'] = 'The owner of the page %s has removed their sign-off. Therefore, your verification has also been removed. Please go to the page to see if it is ready to be marked as verified again.';
-
-$string['signoffviewupdated'] = 'Sign-off status updated';
-$string['verifyviewupdated'] = 'Verification status updated';
-$string['wrongsignoffviewrequest'] = 'You do not have permission to perform the requested action';
-
-// Activity page
-$string['startdate_rule'] = 'Start date must be before completion date';
-$string['add_activity_button'] = 'Add activity page';
-$string['activity_info_fieldset'] = 'Activity information';
-$string['activity_info_title'] = 'Activity description';
-$string['activity_info_desc'] = 'Describe the activity that the learner should achieve. It is a longer version of the page title.';
-
-// Subject
-$string['activity_info_subject'] = 'Subject';
-$string['activity_info_subject_desc'] = 'Select the subject that fits most closely for this activity.';
-$string['activity_info_supervisor'] = 'Responsible staff';
-$string['activity_info_activity_info_supervisor_desc'] = 'Select the group tutor or group administrator who is in charge of this activity.';
-
-$string['activity_info_start_date'] = 'Start date';
-$string['activity_info_end_date'] = 'End date';
-$string['activity_info_start_date_desc'] = 'Select the date when the learner will start work on this activity.';
-$string['activity_info_end_date_desc'] = 'Select the date when the learner is expected to finish this activity.';
-$string['activity_info_achievement_levels'] = 'Levels of achievement';
-$string['activity_info_achievement_levels_desc'] = 'Define the levels of achievement for this particular activity.';
-
-// Activity page achievement levels
-$string['activity_info_achievement_level'] = 'Level %s';
-$string['activity_info_achievement_level_0'] = 'Not demonstrated';
-
-// Activity page form at top of page
-$string['activity_info_staff'] = 'Responsible staff';
-$string['timeframe'] = 'Time frame';
-$string['subject'] =  'Subject'; // Can be pulled from outcomes
-$string['strategy_support']  = 'Strategies and support';
-
-$string['strategy_support_desc'] = '
-    Outline your strategies and support recommendations to help the learner.
-';
-
-$string['resources_support'] = 'Resources';
-$string['resources_support_desc'] = 'Describe the resources you used and how they supported the learner.';
-$string['learner_support'] = 'Learner support';
-$string['learner_support_desc'] = 'Describe how you supported the learner to complete this activity.';
-$string['supportupdatedfor'] = 'Updated "%s"';

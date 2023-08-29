@@ -47,7 +47,7 @@ class PluginBlocktypeGallery extends MaharaCoreBlocktype {
     }
 
     public static function get_viewtypes() {
-        return array('dashboard', 'portfolio', 'profile', 'grouphomepage', 'activity');
+        return array('dashboard', 'portfolio', 'profile', 'grouphomepage');
     }
 
     public static function get_instance_javascript(BlockInstance $instance) {
@@ -470,8 +470,7 @@ class PluginBlocktypeGallery extends MaharaCoreBlocktype {
                 $child->size = $c->describe_size();
                 $child->title = $child->hovertitle = $c->get('title');
                 $child->artefacttype = $c->get('artefacttype');
-                $classname = generate_artefact_class_name($c->get('artefacttype'));
-                $child->iconsrc = $classname::get_icon(array('id' => $a, 'viewid' => $instance->get('view')));
+                $child->iconsrc = call_static_method(generate_artefact_class_name($c->get('artefacttype')), 'get_icon', array('id' => $a, 'viewid' => $instance->get('view')));
                 $count = ArtefactTypeComment::count_comments(null, array($child->id));
                 if ($count) {
                     $child->commentcount = $count[$child->id]->comments;

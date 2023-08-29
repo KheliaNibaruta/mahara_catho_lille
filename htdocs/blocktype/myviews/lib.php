@@ -120,9 +120,7 @@ class PluginBlocktypeMyviews extends MaharaCoreBlocktype {
                 null, // $tag
                 null, // $viewid
                 null, // $excludeowner
-                true, // $groupbycollection
-                true // $excludesubmissions
-
+                true // $groupbycollection
         );
         $views = (array)$views;
         $viewid = $instance->get_view()->get('id');

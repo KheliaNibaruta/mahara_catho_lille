@@ -111,6 +111,11 @@ function ensure_sanity() {
         }
     }
 
+    if (ini_get_bool('magic_quotes_sybase')) {
+        // See above comment re. magic_quotes_runtime
+        @ini_set('magic_quotes_sybase', 0);
+    }
+
     if (ini_get_bool('safe_mode')) {
         // We don't run with safe mode
         throw new ConfigSanityException(get_string('safemodeon', 'error'));
@@ -180,7 +185,6 @@ function ensure_install_sanity() {
     if (is_postgres() && !postgres_create_language('plpgsql')) {
         throw new ConfigSanityException(get_string('plpgsqlnotavailable', 'error'));
     }
-    // phpcs:ignore
     if (is_mysql() && !mysql_has_trigger_privilege()) {
         throw new ConfigSanityException(get_string('mysqlnotriggerprivilege', 'error'));
     }
@@ -200,7 +204,6 @@ function ensure_upgrade_sanity() {
                 throw new ConfigSanityException(get_string('dbcollationmismatch', 'admin'));
             }
         }
-        // phpcs:ignore
         if (!mysql_has_trigger_privilege()) {
             throw new ConfigSanityException(get_string('mysqlnotriggerprivilege', 'error'));
         }
@@ -1806,18 +1809,6 @@ function safe_require_plugin($plugintype, $pluginname, $filename='lib.php', $fun
 }
 
 /**
- * Check to see if a particular plugin is installed by plugin name
- *
- * @param   string $pluginname Name of plugin
- * @param   string $type       Name of plugin type
- * @return  bool
- */
-function is_plugin_installed($pluginname, $type) {
-    $plugins_by_type = plugins_installed($type, true);
-    return isset($plugins_by_type[$pluginname]);
-}
-
-/**
  * Check to see if a particular plugin is installed and is active by plugin name
  *
  * @param   string $pluginname Name of plugin
@@ -1938,11 +1929,12 @@ function plugin_all_installed($all=false) {
 }
 
 /**
- * DEPRECATED: Helper to call a static method when you do not know the name of the class
+ * Helper to call a static method when you do not know the name of the class
+ * you want to call the method on. (PHP 5.0-5.2 did not support $class::method())
  *
- * Please do not use, this function will be removed in a later version of Mahara.
- *
- * @deprecated In PHP 5.3+, you can do $class::$method, $class::method(), $class::{$object->variable}(), or class::$method
+ * @deprecated In PHP 5.3+, you can do $class::$method, $class::method(), or class::$method
+ * See: http://php.net/ChangeLog-5.php#5.3.0
+ * "Added support for dynamic access of static members using $foo::myFunc()."
  */
 function call_static_method($class, $method) {
     $args = func_get_args();
@@ -2278,7 +2270,7 @@ function handle_event($event, $data, $ignorefields = array()) {
                 $classname = 'Plugin' . ucfirst($name) . ucfirst($sub->plugin);
                 try {
                     if (method_exists($classname, $sub->callfunction)) {
-                        $classname::{$sub->callfunction}($event, $data);
+                        call_static_method($classname, $sub->callfunction, $event, $data);
                     }
                 }
                 catch (Exception $e) {
@@ -2675,7 +2667,7 @@ abstract class Plugin implements IPlugin {
                                                 'stream_context' => webservice_create_context($c->url),));
                         //when function return null
                         $wsseSoapClient = new webservice_soap_client_wsse($client->wsdlfile);
-                        $wsseSoapClient->___setUsernameToken($c->username, $c->password);
+                        $wsseSoapClient->__setUsernameToken($c->username, $c->password);
                         $client->setSoapClient($wsseSoapClient);
                     }
                     else {
@@ -3702,12 +3694,7 @@ function artefact_in_view_version($artefact, $view) {
                                           obj->'configdata'->>'artefactid' = ?)
                                    AND view = ?", array($artefact->get('id'), $artefact->get('id'), $view));
     }
-    else if (
-        is_mysql() &&
-        // phpcs:ignore
-        mysql_get_type() == 'mysql' &&
-        version_compare($db_version, '8.0.0', '>=')
-        ) {
+    else if (is_mysql() && mysql_get_type() == 'mysql' && version_compare($db_version, '8.0.0', '>=')) {
         // Note: we can't translate the array string to an array yet so we need to do a regexp match instead
         $mysqlregex = '\\\[' . $artefact->get('id') . ',|\\\s' . $artefact->get('id') . ',|\\\s' . $artefact->get('id') . '\\\]';
         return get_records_Sql_array("SELECT id FROM {view_versioning} v WHERE view = ?
@@ -4672,7 +4659,7 @@ function recalculate_quota() {
         safe_require('artefact', $plugin->name);
         $classname = generate_class_name('artefact', $plugin->name);
         if (is_callable($classname . '::recalculate_quota')) {
-            $pluginuserquotas = $classname::recalculate_quota();
+            $pluginuserquotas = call_static_method($classname, 'recalculate_quota');
             foreach ($pluginuserquotas as $userid => $usage) {
                 if (!isset($userquotas[$userid])) {
                     $userquotas[$userid] = $usage;
@@ -4683,7 +4670,7 @@ function recalculate_quota() {
             }
         }
         if (is_callable($classname . '::recalculate_group_quota')) {
-            $plugingroupquotas = $classname::recalculate_group_quota();
+            $plugingroupquotas = call_static_method($classname, 'recalculate_group_quota');
             foreach ($plugingroupquotas as $groupid => $usage) {
                 if (!isset($groupquotas[$groupid])) {
                     $groupquotas[$groupid] = $usage;
@@ -4784,11 +4771,6 @@ function cron_send_registration_data() {
     require_once(get_config('libroot') . 'registration.php');
     registration_store_data();
     if (!get_config('registration_sendweeklyupdates')) {
-        // Site not set to send updates
-        return;
-    }
-    if (!get_config('productionmode')) {
-        // Site not in production mode so we don't want to send stats when in this state
         return;
     }
 
@@ -5160,7 +5142,7 @@ function build_portfolio_search_html(&$data) {
             // Get the correct css icon
             $namespaced = blocktype_single_to_namespaced($item->artefacttype, $bi->get('artefactplugin'));
             $classname = generate_class_name('blocktype', $namespaced);
-            $item->typestr = $classname::get_css_icon($item->artefacttype);
+            $item->typestr = call_static_method($classname, 'get_css_icon', $item->artefacttype);
             $parentartefact = get_field('blocktype_installed', 'artefactplugin', 'name', $item->artefacttype);
             if ($parentartefact) {
                 $item->typelabel = get_string('title', 'blocktype.' . $parentartefact . '/' . $item->artefacttype);
@@ -5171,8 +5153,7 @@ function build_portfolio_search_html(&$data) {
         }
         else { // artefact
             safe_require('artefact', $artefacttypes[$item->artefacttype]->plugin);
-            $classname = generate_artefact_class_name($item->artefacttype);
-            $links = $classname::get_links($item->id);
+            $links = call_static_method(generate_artefact_class_name($item->artefacttype), 'get_links', $item->id);
             $item->url     = $links['_default'];
             $item->typestr = isset($item->specialtype) ? $item->specialtype : $item->artefacttype;
             if ($item->artefacttype == 'task') {

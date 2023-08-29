@@ -43,10 +43,10 @@ if ($membership != 'admin') {
 }
 
 $returnto = param_alpha('returnto', 'view');
-$classname = generate_class_name('interaction', $plugin);
+
 $elements = array_merge(
     PluginInteraction::instance_config_base_form($plugin, $group, $instance),
-    $classname::instance_config_form($group, $instance),
+    call_static_method(generate_class_name('interaction', $plugin), 'instance_config_form', $group, $instance),
     array(
         'submit' => array(
             'type'  => 'submitcancel',
@@ -58,7 +58,7 @@ $elements = array_merge(
     )
 );
 
-$js = $classname::instance_config_js($group, $instance);
+$js = call_static_method(generate_class_name('interaction', $plugin), 'instance_config_js', $group, $instance);
 
 // save, validate and cancelhandlers are in interaction/lib.php
 $form = pieform(array(
@@ -72,7 +72,6 @@ $form = pieform(array(
 $smarty = smarty(array('tablerenderer'));
 $smarty->assign('form', $form);
 $smarty->assign('INLINEJAVASCRIPT', $js);
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('heading', $group->name);
 $smarty->assign('subheading', TITLE);
 $smarty->display('interaction/edit.tpl');

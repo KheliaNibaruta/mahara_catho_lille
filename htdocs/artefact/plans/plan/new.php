@@ -74,7 +74,6 @@ if ($userPlanTemplates) {
     $smarty->assign('fromtemplate', get_string('fromtemplate', 'artefact.plans'));
     $smarty->assign('templatedialogdescription', get_string('templatedialogdescription', 'artefact.plans'));
 }
-setpageicon($smarty, 'icon-clipboard-list');
 $smarty->assign('form', $form);
 $smarty->assign('PAGEHEADING', $pageheading);
 $smarty->assign('SUBSECTIONHEADING', $subsectionheading);

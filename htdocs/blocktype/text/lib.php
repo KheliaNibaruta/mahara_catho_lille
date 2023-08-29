@@ -412,9 +412,9 @@ class PluginBlocktypeText extends MaharaCoreBlocktype {
     /**
      * Rewrites embedded image urls in the $configdata['text']
      *
-     * @see PluginBlocktype::rewrite_blockinstance_extra_config()
+     * See more in PluginBlocktype::rewrite_blockinstance_extra_config()
      */
-    public static function rewrite_blockinstance_extra_config(View $view, BlockInstance $block, $configdata, $artefactcopies, View $originalView, BlockInstance $originalBlock, $copyissubmission) {
+    public static function rewrite_blockinstance_extra_config(View $view, BlockInstance $block, $configdata, $artefactcopies) {
         $regexp = array();
         $replacetext = array();
         $new_blockid = $block->get('id');

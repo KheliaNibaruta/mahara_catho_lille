@@ -33,7 +33,6 @@ $string['canteditinstitutioncollections'] = 'You are not allowed to edit institu
 $string['canteditcollection'] = 'You are not allowed to edit this collection.';
 $string['cantcreatecollection'] = 'You are not allowed to create this collection.';
 $string['cantdeletecollection'] = 'You cannot delete this collection.';
-$string['cantdeletecollectionsubmission'] = 'You cannot delete this collection while it is still a submission.';
 $string['canteditdontown'] = 'You cannot edit this collection because you do not own it.';
 $string['canteditsubmitted'] = 'You cannot edit this collection because it has been submitted for assessment to %s. You will have to wait until it is released.';
 $string['collection'] = 'collection';
@@ -50,7 +49,7 @@ $string['sitecollections'] = 'Site collections';
 $string['collectionaccess'] = 'Collection access';
 $string['collectionaccessrules'] = 'Collection access rules';
 $string['collectionaccesseditedsuccessfully'] = 'Collection access saved successfully';
-$string['collectioneditaccess1'] = 'You are changing the sharing permissions for %d pages in this collection.';
+$string['collectioneditaccess'] = 'You are editing access for %d pages in this collection.';
 $string['collectionconfirmdelete1'] = '<p>Do you really want to delete this collection? It will also delete all pages within this collection. If you only want to delete individual pages, abort this action and delete the pages in question themselves.</p>
 <p>Please consider creating a backup by <a href="%sexport/index.php?collection=%s">exporting</a> your portfolio before you delete anything.</p>
 <p><strong>Note:</strong> If you decide to delete this collection, all your files and journal entries that you linked in the pages will still be available. However, any text blocks and comments placed on the pages will be deleted along with the pages.</p>';
@@ -60,7 +59,6 @@ $string['collectiondeleted'] = 'Collection deleted successfully.';
 $string['collectiondescription'] = 'A collection is a set of pages that are linked to one another and have the same access permissions. You can create as many collections as you like, but a page cannot appear in more than one collection.';
 $string['collectiontitle'] = 'Collection title';
 $string['confirmcancelcreatingcollection'] = 'This collection has not been completed. Do you really want to cancel?';
-$string['continueeditaccess1'] = 'Continue: Share';
 $string['collectionsaved'] = 'Collection saved successfully.';
 $string['copyacollection'] = 'Copy a collection';
 $string['created'] = 'Created';
@@ -78,7 +76,7 @@ $string['edittitleanddesc'] = 'Edit title and description';
 $string['editviews'] = 'Edit collection pages';
 $string['editviewaccess'] = 'Edit page access';
 $string['editaccess'] = 'Edit collection access';
-$string['emptycollectionnoeditaccess1'] = 'You cannot share an empty collections. Add at least one page.';
+$string['emptycollectionnoeditaccess'] = 'You cannot edit access to empty collections. Add some pages first.';
 $string['emptycollection'] = 'Empty collection';
 $string['manage'] = 'Manage';
 $string['manageviews'] = 'Manage pages';
@@ -86,6 +84,7 @@ $string['manageviewsspecific'] = 'Manage pages in "%s"';
 $string['name'] = 'Collection name';
 $string['needtoselectaview'] = 'You need to select a page to add to the collection.';
 $string['newcollection'] = 'New collection';
+$string['nexteditaccess'] = 'Next: Edit access';
 $string['nocollections'] = 'No collections yet.';
 $string['nocollectionsaddone'] = 'No collections yet. %sAdd one%s.';
 $string['nooverride'] = 'No override';
@@ -96,57 +95,6 @@ $string['noviews'] = 'No pages.';
 $string['overrideaccess'] = 'Override access';
 $string['onlyactivetemplatewarning'] = 'This is the only auto-copied template in this institution. By changing this setting, there will not be a template to copy into new accounts (and based on a cron job if such is configured) automatically.';
 $string['updatingautocopytemplatewarning'] = 'Only one collection can be the active automatically copied template for an institution. By setting this collection to be the auto-copied template for the institution "%s", the current auto-copied collection "%s" will be set to inactive. It will not be shared with the institution any more.';
-
-// Outcomes
-$string['manageoutcomes'] = 'Manage outcomes';
-$string['addoutcomelink'] = 'Add an outcome';
-$string['confirmdeleteoutcomedb'] = 'Are you sure you want to delete this outcome? This action cannot be reverted.';
-$string['confirmdeleteoutcome'] = 'Are you sure you want to delete this outcome? This outcome hasn\'t been saved yet.';
-$string['deleteactivitiesfirst'] = 'Associated activity pages must be deleted first.';
-$string['deletefailedoutcome'] = 'Failed to delete \'Outcome %s\'.';
-$string['shorttitle'] = 'Short title';
-$string['shorttitledesc'] = 'Enter a short title for this outcome to be used as a short heading. It can have a maximum of 70 characters. This field is required.';
-$string['fulltitle'] = 'Full title';
-$string['fulltitledesc'] = 'Enter the full title of this outcome. It can have a maximum of 255 characters.';
-$string['outcometype'] = 'Outcome type';
-$string['outcometypedesc'] = 'Select the type for this outcome.';
-$string['outcome'] = 'Outcome';
-$string['outcometitle'] = 'Outcome %s';
-$string['outcomesaveerror'] ='There was an error saving the outcomes';
-$string['outcomesavesuccess'] ='Outcomes saved successfully';
-$string['outcomedeleted'] = 'Outcome has been deleted';
-$string['completeoutcome'] = 'Outcome \'%s\' has been completed';
-$string['incompleteoutcomedisabled'] = 'Mark outcome \'%s\' as completed is disabled';
-$string['completeoutcomeaction'] = 'Outcome \'%s\' has been completed. Click to reset it.';
-$string['incompleteoutcomeaction'] = 'Mark outcome \'%s\' as completed';
-$string['deleteoutcome'] = 'Delete outcome';
-$string['deletenewoutcome'] = 'Delete %s';
-$string['supporttitle'] = 'Support is taking place';
-$string['outcomeupdated'] = 'Outcome has been updated';
-$string['outcomeupdatefailed'] = 'Outcome update failed';
-$string['progress'] = 'Progress';
-$string['markcomplete'] = 'Are you sure you want to mark this outcome as completed?';
-$string['markincomplete'] = 'Are you sure you want to revert this outcome and mark it as not yet completed?';
-$string['addactivity'] = 'Add activity';
-$string['nooutcomesmessage'] = 'There are no outcomes defined for this portfolio.';
-$string['nooutcometypes'] = 'There are no outcome types for this institution.';
-$string['configureoutcomes'] = 'Configure outcomes';
-$string['ondate'] = 'on %s';
-$string['manageoutcomesspecific'] = 'Manage outcomes in "%s"';
-$string['outcome_progress_description'] = 'Maximum of 255 characters.';
-$string['activity'] = 'Activity';
-$string['tabledesc'] = 'Pages that are part of this outcome';
-$string['noactivities'] = 'This outcome does not have any activities yet.';
-$string['completeactivityaction'] = 'Remove sign-off on activity \'%s\'';
-$string['incompleteactivityaction'] = 'Sign off activity \'%s\'';
-$string['completeactivity'] = 'Activity \'%s\' has been signed off';
-$string['incompleteactivity'] = 'Activity \'%s\' needs to be signed off';
-$string['activityupdated'] = 'Activity status has been updated';
-$string['activityeupdatefailed'] = 'Failed to update activity status';
-$string['activitysignoffundo'] =  'If you select "Yes", you will remove the signed-off status from the activity.';
-$string['activitysignoff'] = 'Select "Yes" to sign off this activity.';
-
-
 $string['portfoliocompletion'] = 'Portfolio completion';
 $string['potentialviews'] = 'Potential pages';
 $string['saveapply'] = 'Apply and save';
@@ -180,13 +128,6 @@ $string['viewnavigationdesc'] = 'Add a horizontal navigation bar to every page i
 $string['viewstobeadded'] = 'Pages to be added';
 $string['viewconfirmremove'] = 'Are you sure you wish to remove this page from the collection?';
 $string['collectioncopywouldexceedquota'] = 'Copying this collection would exceed your file quota.';
-$string['outcomeportfolio'] = 'Outcomes portfolio';
-$string['outcomeportfoliodesc'] = 'Creates a collection with outcomes that are managed in the collection.';
-$string['outcomecategory'] = 'Outcome category';
-$string['outcomecategorydesc'] = 'Select the category of outcomes that you want to use in this portfolio.';
-$string['outcomecategorymissing'] = '<div class="alert alert-warning">Outcome categories for the institution "%s" are missing. Please add outcome categories to the database to be used with this institution. They can be added via the "populate_outcome_tables.php" CLI script.</div>';
-$string['outcomes'] = 'Outcomes';
-$string['outcomesoverallcompletion'] = 'Overall completion of outcomes';
 
 $string['copiedparticle'] = 'Copied %s';
 $string['andparticle'] = 'and %s';
@@ -233,11 +174,6 @@ $string['progresspagedescription'] = 'Set up the default layout for the portfoli
 
 $string['progressportfolios'] = 'Portfolio count';
 $string['progressverifiers'] = 'Reviewer percentage';
-
-// Activity page
-$string['activitypage'] = 'Activity page';
-$string['progresspagedescription'] = 'Set up the default layout for an activity page for a group collection.';
-
 
 //Verification checkbox visually-hidden text
 $string['sharedviewverifiedunchecked'] = '%s by %s is not reviewed';
@@ -301,9 +237,3 @@ $string['verificationdone'] = 'Confirmed statement for the portfolio "%s" by %s'
 $string['removeaccess'] = 'Remove my access from the portfolio "%s" by %s';
 
 $string['lockedcollection'] = 'Locked until %s';
-
-$string['linktosubmissionoriginaltitle'] = 'Original portfolio';
-$string['linktosubmissionoriginallink'] = '<a href="%s">%s</a>';
-$string['linktosubmissionoriginaldeleted'] = 'Deleted';
-$string['linktosubmissionoriginaldescription'] = 'This portfolio is a copy made for submission purposes. The link takes you to the original portfolio. ';
-$string['linktosubmissionoriginaldeleteddescription'] = 'This portfolio is a copy made for submission purposes. The original portfolio has been deleted.';

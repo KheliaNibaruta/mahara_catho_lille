@@ -85,7 +85,7 @@ function xmldb_blocktype_externalfeed_upgrade($oldversion=0) {
         // Reset all feeds to reset themselves
         set_field('blocktype_externalfeed_data', 'lastupdate', db_format_timestamp('0'));
         safe_require('blocktype', 'externalfeed');
-        PluginBlocktypeExternalfeed::refresh_feeds();
+        call_static_method('PluginBlocktypeExternalfeed', 'refresh_feeds');
     }
 
     if ($oldversion < 2014041500) {

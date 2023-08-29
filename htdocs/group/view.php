@@ -11,7 +11,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('MENUITEM', 'engage/index');
 define('MENUITEM_SUBPAGE', 'info');
 require(dirname(dirname(__FILE__)) . '/init.php');
@@ -162,7 +162,6 @@ if (!$newlayout) {
 $smarty->assign('group', $group);
 $smarty->assign('editwindow', $editwindow);
 $smarty->assign('cancopy', group_can_create_groups());
-setpageicon($smarty, 'icon-people-group');
 $smarty->assign('SUBPAGETOP', 'group/groupuseractions.tpl');
 $smarty->assign('headingclass', 'page-header');
 $smarty->assign('lastupdatedstr', $view->lastchanged_message());

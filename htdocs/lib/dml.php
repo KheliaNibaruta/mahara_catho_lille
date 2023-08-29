@@ -1106,7 +1106,7 @@ function get_table_from_query($sql) {
         $type = 'update';
     }
     if ($prefix = get_config('dbprefix')) {
-        $table = preg_replace('/^' . $prefix . '/', '', $table ?? '');
+        $table = preg_replace('/^' . $prefix . '/', '', $table);
     }
     return array($type, $table, $idsql, $bindoffset);
 }
@@ -1283,7 +1283,7 @@ function table_need_trigger($table) {
     if (empty($estables)) {
         $search_plugin = get_config('searchplugin');
         $tables = get_config_plugin('search', $search_plugin, 'types');
-        $estables = explode(',', $tables ?? '');
+        $estables = explode(',', $tables);
         // Extra table to trigger queuing on.
         $estables[] = 'view_artefact';
     }
@@ -1802,18 +1802,11 @@ function is_mysql() {
     return (strpos(get_config('dbtype'), 'mysql') === 0);
 }
 
-/**
- * Get the type of the mysql database actually in use.
- *
- * @throws SQLException if the database is not mysql.
- * @return String The type of the mysql database in use.
- */
 function mysql_get_type() {
     if (!is_mysql()) {
         throw new SQLException('mysql_get_type() expects a mysql database');
     }
     // First check against version_comment as some older versions store the info we need there
-    // phpcs:ignore
     $mysqltype = mysql_get_variable('version_comment');
     if (stripos($mysqltype, 'MariaDB') !== false) {
         return 'mariadb';
@@ -1822,7 +1815,6 @@ function mysql_get_type() {
         return 'percona';
     }
     // Then check against version as some newer versions store the info we need there
-    // phpcs:ignore
     $mysqltype = mysql_get_variable('version');
     if (stripos($mysqltype, 'MariaDB') !== false) {
         return 'mariadb';
@@ -2109,11 +2101,6 @@ function postgres_create_language($language) {
     return postgres_language_exists($language);
 }
 
-/**
- * Check whether the current user has permission to create triggers.
- *
- * @return bool True if the user has permission to create triggers, false otherwise.
- */
 function mysql_has_trigger_privilege() {
     // Finding out whether the current user has trigger permission
     // seems to be quite hard.  It would require parsing the output
@@ -2198,13 +2185,6 @@ function db_drop_trigger($name, $table) {
     }
 }
 
-/**
- * Fetch a mysql variable
- *
- * @throws SQLException We are not using MySQL or the variable name is invalid.
- * @param String $name The name of the variable to fetch.
- * @return String The value of the variable.
- */
 function mysql_get_variable($name) {
     global $db;
     if (!is_mysql()) {
@@ -2226,7 +2206,6 @@ function get_db_version() {
         $version = $result->fields['server_version'];
     }
     else {
-        // phpcs:ignore
         $version = mysql_get_variable('innodb_version');
     }
     return $version;

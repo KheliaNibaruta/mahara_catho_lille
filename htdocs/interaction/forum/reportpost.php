@@ -113,7 +113,6 @@ $poster->find_by_id($post->poster);
 
 $smarty = smarty();
 $smarty->assign('deleteduser', $poster->get('deleted'));
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('subheading', TITLE);
 $smarty->assign('post', $post);
 $smarty->assign('poster', $poster);

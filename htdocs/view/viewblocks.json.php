@@ -10,7 +10,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('JSON', 1);
 require(dirname(dirname(__FILE__)) . '/init.php');
 require_once(get_config('libroot') . 'view.php');
@@ -75,15 +75,14 @@ else {
         $options['blockid'] = $blockid;
         safe_require_plugin('blocktype', $block->get('blocktype'));
         $classname = generate_class_name('blocktype', $block->get('blocktype'));
-        if ($classname::shows_details_in_modal($block)) {
-            $rendered = $classname::render_details_in_modal($block);
+        if (call_static_method($classname, 'shows_details_in_modal', $block)) {
+            $rendered = call_static_method($classname, 'render_details_in_modal', $block);
         }
         $title = $block->get('title');
     }
-    if (empty($rendered) && $artefactid) {
+    if ($artefactid) {
         $rendered = $artefact->render_self($options);
     }
-
     if (!empty($rendered['javascript'])) {
         $html = '<script>' . $rendered['javascript'] . '</script>';
     }

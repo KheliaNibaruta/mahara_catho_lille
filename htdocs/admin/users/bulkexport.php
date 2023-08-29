@@ -24,8 +24,7 @@ if (!$exportplugins) {
 
 foreach ($exportplugins as $plugin) {
     safe_require('export', $plugin->name);
-    $classname = generate_class_name('export', $plugin->name);
-    $exportoptions[$plugin->name] = $classname::get_title();
+    $exportoptions[$plugin->name] = call_static_method(generate_class_name('export', $plugin->name), 'get_title');
 }
 $pdfrun = 'multi';
 
@@ -144,7 +143,7 @@ function bulkexport_submit(Pieform $form, $values) {
         else if ($exporttype == 'htmllite') {
             $exporter = new PluginExportHtmlLite($user, PluginExport::EXPORT_ALL_VIEWS_COLLECTIONS, PluginExport::EXPORT_ALL_ARTEFACTS, 'export_bulk_progress_handler', $exportcount+1, $num_users);
         }
-        else if ($exporttype == 'pdf' || $exporttype == 'pdflite') {
+        else if ($exporttype == 'pdf' || $exporttype = 'pdflite') {
             if ($exportcount === 0 && $num_users === 1) {
                 $pdfrun = 'all';
             }

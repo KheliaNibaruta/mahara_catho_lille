@@ -36,7 +36,7 @@ Scenario: Showing contextual help for pages under menu "Portfolio" (Bug 809297).
   And I click on "Help"
   Then I should see "You can move blocks around the page either by dragging them or using your keyboard controls."
   And I click on "Close help"
-  Given I click on "Configure" in the "Toolbar buttons" "Nav" property
+  Given I click on "Settings" in the "Toolbar buttons" "Nav" property
   And I click on "Help"
   # Tags
   Then I should see "You can add tags to artefacts, pages and collections you create."
@@ -50,7 +50,7 @@ Scenario: Showing contextual help for pages under menu "Portfolio" (Bug 809297).
   And I click on "Help for \"Tags\"" in the "Tags section" "Tags" property
   Then I should see "You can add tags to artefacts, pages and collections you create. Tags are descriptive labels that allow you to find your content later on more easily."
   And I set the field "Collection name" to "Collection 01"
-  And I click on "Continue: Edit collection pages"
+  And I click on "Next: Edit collection pages"
   # Edit collection pages
   And I click on "Help"
   Then I should see "Here you can add pages to your collection and set the order in which they will be displayed in the collection navigation."
@@ -101,21 +101,21 @@ Scenario: Showing correct external manual help file for mahara page
   And I choose "Portfolios" in "Institutions" from administration menu
   And I click on "Help" in the "Footer" "Footer" property
   And I switch to the new window
-  And I scroll to the center of id "institution-portfolios"
-  And I should see "11.6.13. Institution portfolios" in "h2" on the screen
+  And I scroll to the center of id "institution-pages"
+  And I should see "11.6.13. Institution pages and collections" in "h2" on the screen
   And I switch to the main window
   When I am on homepage
   And I choose "Portfolios" in "Configure site" from administration menu
   And I click on "Help" in the "Footer" "Footer" property
   And I switch to the new window
-  And I scroll to the center of id "site-portfolios"
-  And I should see "11.3.7. Site portfolios" in "h2" on the screen
+  And I scroll to the center of id "site-pages-and-collections"
+  And I should see "11.3.7. Site pages and collections" in "h2" on the screen
   And I switch to the main window
   When I am on homepage
   And I click on "GroupA"
   And I click on "Portfolios" in the "Navigation" "Groups" property
   And I click on "Help" in the "Footer" "Footer" property
   And I switch to the new window
-  And I scroll to the center of id "portfolios"
-  And I should see "6.4.4. Portfolios" in "h2" on the screen
+  And I scroll to the center of id "pages-and-collections"
+  And I should see "6.4.4. Pages and collections" in "h2" on the screen
   And I switch to the main window

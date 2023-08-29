@@ -35,7 +35,7 @@ Scenario: Creating a page with content in it (Bug 1426983)
     # (Bug 1891265 end)
     And I click on "Save"
     # Editing the pages
-    And I click on "Configure" in the "Toolbar buttons" "Nav" property
+    And I click on "Settings" in the "Toolbar buttons" "Nav" property
     #Change the Page title
     And I fill in the following:
     | Page title       | This is the edited page title |
@@ -82,7 +82,7 @@ Scenario: Creating a page with content in it (Bug 1426983)
     And I should see "Delete this page"
     # User share page with public and enable copy page functionality
     And I choose "Portfolios" in "Create" from main menu
-    And I click on "Manage sharing" in "This is the edited page title" card access menu
+    And I click on "Manage access" in "This is the edited page title" card access menu
     And I click on "Advanced options"
     And I enable the switch "Allow copying"
     And I collapse "Advanced options" node

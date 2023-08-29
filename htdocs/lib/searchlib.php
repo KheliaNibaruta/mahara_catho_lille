@@ -49,8 +49,7 @@ defined('INTERNAL') || die();
 function search_user($query_string, $limit, $offset = 0, $data = array()) {
     $plugin = get_config('searchplugin');
     safe_require('search', $plugin);
-    $classname = generate_class_name('search', $plugin);
-    $results = $classname::search_user($query_string, $limit, $offset, $data);
+    $results = call_static_method(generate_class_name('search', $plugin), 'search_user', $query_string, $limit, $offset, $data);
 
     if ($results['data']) {
         foreach ($results['data'] as &$result) {
@@ -91,9 +90,8 @@ function get_institutional_admin_search_results($search, $limit) {
 function institutional_admin_user_search($query, $institution, $limit) {
     $plugin = get_config('searchplugin');
     safe_require('search', $plugin);
-    $classname = generate_class_name('search', $plugin);
-    $ret = $classname::institutional_admin_search_user($query, $institution, $limit);
-    return $ret;
+    return call_static_method(generate_class_name('search', $plugin), 'institutional_admin_search_user',
+                              $query, $institution, $limit);
 }
 
 
@@ -360,14 +358,9 @@ function get_admin_user_search_results($search, $offset, $limit) {
                                'string' => $search->institution);
     }
 
-    $classname = generate_class_name('search', $plugin);
-    $results = $classname::admin_search_user(
-        $queries,
-        $constraints,
-        $offset,
-        $limit,
-        $search->sortby,
-        $search->sortdir
+    $results = call_static_method(
+        generate_class_name('search', $plugin), 'admin_search_user',
+        $queries, $constraints, $offset, $limit, $search->sortby, $search->sortdir
     );
 
     if ($results['count']) {
@@ -421,9 +414,9 @@ function get_admin_user_search_results($search, $offset, $limit) {
                 foreach ($customcolsarray as $k => $v) {
                     $classname = 'ArtefactType' . $v;
                     if (is_callable(array($classname, 'can_be_multiple')) &&
-                        $classname::can_be_multiple() &&
+                        call_static_method($classname, 'can_be_multiple') &&
                         is_callable(array($classname, 'get_multiple')) &&
-                        $multiple = $classname::get_multiple($result['id'])) {
+                        $multiple = call_static_method($classname, 'get_multiple', $result['id'])) {
                         $result[$v] = $multiple;
                     }
                 }
@@ -560,7 +553,7 @@ function build_admin_user_search_results($search, $offset, $limit) {
 
                 // check if this is a local profile icon and has it's own display info
                 if (is_callable(array($classname, 'usersearch_column_structure'))) {
-                    $out = $classname::usersearch_column_structure();
+                    $out = call_static_method($classname, 'usersearch_column_structure');
                     $cols[$v] = $out;
                 }
             }
@@ -885,9 +878,6 @@ function build_admin_archived_submissions_results($search, $offset, $limit) {
         if ($search['type'] == 'current') {
             // Format the date nicely.
             $results['data'][$key]['submittedtime'] = format_date(strtotime($data['submittedtime']));
-            // If the archiving started but failed
-            require_once(get_config('docroot') . 'export/lib.php');
-            $results['data'][$key]['needrequeue'] = has_export_failed($data['releasetype'], $data['releaseid'], $data['id']);
         }
     }
 
@@ -987,11 +977,6 @@ function build_admin_archived_submissions_results($search, $offset, $limit) {
     if ($results['data']) {
         foreach ($results['data'] as &$result) {
             $result['canedituser'] = $USER->can_masquerade_as((object)$result, array('supportadmin'));
-            if (isset($result['releasetype']) && $result['releasetype'] == 'collection') {
-                // we need to find the first true page for the link
-                $collection = new Collection($result['releaseid']);
-                $result['url'] = $collection->get_url();
-            }
         }
     }
 
@@ -1075,7 +1060,7 @@ function get_group_user_search_results($group, $query, $offset, $limit, $members
     $searchclass = generate_class_name('search', $plugin);
 
     $constraints = array();
-    if ($searchclass::can_process_raw_group_search_user_queries()) {
+    if (call_static_method($searchclass, 'can_process_raw_group_search_user_queries')) {
         // Pass the raw query string through to group_search_user; parsing of the
         // query depends on the plugin configuration.
         $queries = $query;
@@ -1111,17 +1096,10 @@ function get_group_user_search_results($group, $query, $offset, $limit, $members
         }
     }
 
-    $results = $searchclass::group_search_user(
-        $group,
-        $queries,
-        $constraints,
-        $offset,
-        $limit,
-        $membershiptype,
-        $order,
-        $friendof,
-        $sortoptionidx,
-        $nontutor
+    $results = call_static_method(
+        $searchclass,
+        'group_search_user',
+        $group, $queries, $constraints, $offset, $limit, $membershiptype, $order, $friendof, $sortoptionidx, $nontutor
     );
 
     if ($results['count'] && $results['data']) {
@@ -1181,17 +1159,15 @@ function get_group_user_search_results($group, $query, $offset, $limit, $members
 function search_group($query_string, $limit, $offset = 0, $type = 'member', $groupcategory = '', $institution='all') {
     $plugin = get_config('searchplugin');
     safe_require('search', $plugin);
-    $classname = generate_class_name('search', $plugin);
-    $ret = $classname::search_group($query_string, $limit, $offset, $type, $groupcategory, $institution);
-    return $ret;
+
+    return call_static_method(generate_class_name('search', $plugin), 'search_group', $query_string, $limit, $offset, $type, $groupcategory, $institution);
 }
 
 function search_selfsearch($query_string, $limit, $offset, $type = 'all') {
     $plugin = get_config('searchplugin');
     safe_require('search', $plugin);
-    $classname = generate_class_name('search', $plugin);
-    $ret = $classname::self_search($query_string, $limit, $offset, $type);
-    return $ret;
+
+    return call_static_method(generate_class_name('search', $plugin), 'self_search', $query_string, $limit, $offset, $type);
 }
 
 function get_portfolio_types_from_param($filter) {
@@ -1230,8 +1206,8 @@ function get_portfolio_items_by_tag($tag, $owner, $limit, $offset, $sort='name',
 
     $plugin = 'internal';
     safe_require('search', $plugin);
-    $classname = generate_class_name('search', $plugin);
-    $result = $classname::portfolio_search_by_tag($tag, $owner, $limit, $offset, $sort, $types, $returntags, $viewids);
+
+    $result = call_static_method(generate_class_name('search', $plugin), 'portfolio_search_by_tag', $tag, $owner, $limit, $offset, $sort, $types, $returntags, $viewids);
     $result->filter = $result->type = $type ? $type : 'all';
     return $result;
 }
@@ -1242,8 +1218,7 @@ function get_search_plugins() {
     if ($searchplugins = plugins_installed('search')) {
         foreach ($searchplugins as $plugin) {
             safe_require_plugin('search', $plugin->name, 'lib.php');
-            $classname = generate_class_name('search', $plugin->name);
-            if (!$classname::is_available_for_site_setting()) {
+            if (!call_static_method(generate_class_name('search', $plugin->name), 'is_available_for_site_setting')) {
                 continue;
             }
 

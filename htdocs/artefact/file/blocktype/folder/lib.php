@@ -39,7 +39,7 @@ class PluginBlocktypeFolder extends MaharaCoreBlocktype {
     }
 
     public static function get_viewtypes() {
-        return array('dashboard', 'portfolio', 'profile', 'activity');
+        return array('dashboard', 'portfolio', 'profile');
     }
 
     public static function render_instance_export(BlockInstance $instance, $editing=false, $versioning=false, $exporting=null) {
@@ -209,8 +209,8 @@ class PluginBlocktypeFolder extends MaharaCoreBlocktype {
      */
     public static function artefactchooser_get_element_data($artefact) {
         $folderdata = ArtefactTypeFileBase::artefactchooser_folder_data($artefact);
-        $classname = generate_artefact_class_name($artefact->artefacttype);
-        $artefact->icon = $classname::get_icon(array('id' => $artefact->id));
+
+        $artefact->icon = call_static_method(generate_artefact_class_name($artefact->artefacttype), 'get_icon', array('id' => $artefact->id));
         $artefact->hovertitle = $artefact->description;
 
         $path = $artefact->parent ? ArtefactTypeFileBase::get_full_path($artefact->parent, $folderdata->data) : '';
@@ -255,26 +255,5 @@ class PluginBlocktypeFolder extends MaharaCoreBlocktype {
             $artefacts = array_unique($artefacts);
         }
         return $artefacts;
-    }
-
-    public static function shows_details_in_modal(BlockInstance $instance) {
-        $configdata = $instance->get('configdata');
-        return isset($configdata['artefactid']);
-    }
-
-    public static function render_details_in_modal(BlockInstance $instance) {
-        $artefactid = param_integer('artefactid', null);
-        if ($artefactid) {
-            // render the folder based on the new artefact id when we want to render a sub folder
-            $configdata = $instance->get('configdata');
-            $configdata['artefactid'] = $artefactid;
-            $instance->set('configdata', $configdata);
-        }
-        $html = self::render_instance($instance);
-        return array(
-           'html' => $html,
-           'artefactid' =>  $instance->get('configdata')['artefactid'],
-           'javascript'=> 'activateModalLinks();',
-        );
     }
 }

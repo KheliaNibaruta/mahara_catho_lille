@@ -10,7 +10,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('JSON', 1);
 
 require(dirname(dirname(dirname(__FILE__))) . '/init.php');
@@ -56,8 +56,8 @@ if ($action == 'update') {
         json_reply(true, get_string('accessdenied', 'error'));
         exit;
     }
-    $classname = generate_class_name('blocktype', $bi->get('blocktype'));
-    $values = $classname::instance_config_save($values, $bi);
+
+    $values = call_static_method(generate_class_name('blocktype', $bi->get('blocktype')), 'instance_config_save', $values, $bi);
     $title = (isset($values['title'])) ? $values['title'] : '';
     unset($values['title']);
     unset($values['_redrawblocks']);

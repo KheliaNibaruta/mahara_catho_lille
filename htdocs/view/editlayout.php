@@ -21,44 +21,20 @@ safe_require('artefact', 'file');
 
 $id = param_integer('id', false);
 $new = param_boolean('new', false);
-$view_type = param_alpha('type', 'portfolio');
-$collection_to_add_view = param_integer('collection', false);
-
-$outcome = param_integer('outcome', false);
-$view = null;
-
 
 if ($new && $id === false) {
-    $values['type'] = $view_type;
-
-    $sitedefaultviewid = get_field(
-        'view',
-        'id',
-        'institution',
-        'mahara',
-        'template',
-        View::SITE_TEMPLATE,
-        'type',
-        $view_type
-    );
-
+    // Use the site default portfolio page to create a new page
+    // cribbed from createview_submit()
+    $sitedefaultviewid = get_field('view', 'id', 'institution', 'mahara', 'template', View::SITE_TEMPLATE, 'type', 'portfolio');
     if (!empty($sitedefaultviewid)) {
         $artefactcopies = array();
         $values = array();
-
         $groupid = param_integer('group', 0);
         $institutionname = param_alphanum('institution', false);
         if (!empty($groupid)) {
             $values['group'] = $groupid;
         }
-
-        if ($view_type == 'activity') {
-            View::check_can_edit_activity_page_info($groupid);
-            View::check_group_outcome_collection($groupid, $outcome, $collection_to_add_view);
-            $values['outcome'] = $outcome;
-        }
-
-        if (!empty($institutionname)) {
+        else if (!empty($institutionname)) {
             $values['institution'] = $institutionname;
         }
 
@@ -69,14 +45,7 @@ if ($new && $id === false) {
         }
     }
     else {
-        throw new ConfigSanityException(get_string('viewtemplatenotfound', 'error'));
-    }
-
-    if ($collection_to_add_view) {
-        require_once(get_config('libroot') . 'collection.php');
-        $coll = new Collection($collection_to_add_view);
-        // If view is activity -> set db default values here too
-        $num_pages = $coll->add_views(['view_' . $view->get('id') => $view]);
+         throw new ConfigSanityException(get_string('viewtemplatenotfound', 'error'));
     }
 
     $goto = get_config('wwwroot') . 'view/editlayout.php?new=1&id=' . $view->get('id');
@@ -121,10 +90,6 @@ $institution = $view->get('institution');
 $view->set_edit_nav();
 $view->set_user_theme();
 
-if ($view->get('type') == 'activity' && !$issitetemplate) {
-    View::check_can_edit_activity_page_info($group);
-}
-
 // Clean urls are only available for portfolio views owned by groups or users who already
 // have their own clean profiles or group homepages.
 if ($urlallowed = get_config('cleanurls') && $view->get('type') == 'portfolio' && !$institution) {
@@ -151,7 +116,7 @@ $state = get_string('settings', 'view');
 $pieformname = 'settings';
 list($form, $inlinejavascript) = create_settings_pieform();
 
-$javascript = array('jquery', 'js/jquery/jquery-ui/js/jquery-ui.min.js');
+$javascript = array('jquery','js/jquery/jquery-ui/js/jquery-ui.min.js');
 $stylesheets[] = '<link rel="stylesheet" type="text/css" href="' . append_version_number(get_config('wwwroot') . 'js/jquery/jquery-ui/css/smoothness/jquery-ui.min.css') . '">';
 
 $smarty = smarty($javascript, $stylesheets, array('view' => array('Row', 'rownr')), array('sidebars' => false));
@@ -170,20 +135,18 @@ $smarty->assign('PAGEHEADING', $state);
 $returnto = $view->get_return_to_url_and_title();
 $smarty->assign('url', $returnto['url']);
 $smarty->assign('title', $returnto['title']);
-$smarty->assign('issubmission', $view->is_submission());
 
 $smarty->display('view/editlayout.tpl');
 
 function create_settings_pieform() {
-    global $view, $pieformname, $issiteview, $issitetemplate, $outcome,
-        $canedittitle, $canuseskins;
+    global $view, $pieformname, $issiteview, $issitetemplate,
+    $canedittitle, $canuseskins;
     $inlinejavascript = '';
 
     // Get the elements for each section of the form
     $advancedclasslast = '';
     $advancedelements = array();
     $basicelements = array();
-    $activity_info_elements = array();
     $extrasettingformfields = array();
     $hiddenskinelements = array();
     $skinelements = array();
@@ -208,13 +171,6 @@ function create_settings_pieform() {
         $advancedclasslast = 'last';
     }
 
-    // Only allow activity pages as part of group portfolios
-    $group = $view->get('group');
-    $hidden_activity_info_elems = array();
-    if ($view->get('type') == 'activity' && $group && is_outcomes_group($group)) {
-        list($activity_info_elements, $hidden_activity_info_elems) = get_view_activity_info_elements($outcome);
-    }
-
     //visible elements of the sections
     $formelements = array();
 
@@ -227,17 +183,6 @@ function create_settings_pieform() {
             'legend'      => get_string('basics', 'view'),
             'elements'    => $basicelements
         );
-
-        if ($view->get('type') == 'activity' && $group && is_outcomes_group($group)) {
-            $formelements['activityinfo'] = array(
-                'type'        => 'fieldset',
-                'collapsible' => true,
-                'collapsed'   => false,
-                'legend'      => get_string('activity_info_fieldset', 'view'),
-                'elements'    => $activity_info_elements
-            );
-        }
-
         $formelements['advanced'] = array(
             'type'        => 'fieldset',
             'class'       =>  $advancedclasslast,
@@ -260,9 +205,9 @@ function create_settings_pieform() {
     }
 
     $formelements['submitform'] = array(
-        'type' => 'submit',
-        'class' => 'btn-primary',
-        'value' => get_string('save'),
+            'type' => 'submit',
+            'class' => 'btn-primary',
+            'value' => get_string('save'),
     );
 
     //hidden elements of the sections
@@ -276,10 +221,6 @@ function create_settings_pieform() {
 
     if ($canuseskins) {
         $hiddenelements = array_merge($hiddenelements, $hiddenskinelements);
-    }
-
-    if ($view->get('type') == 'activity') {
-        $hiddenelements = array_merge($hiddenelements, $hidden_activity_info_elems);
     }
 
     $elements = array_merge($formelements, $hiddenelements);
@@ -324,14 +265,14 @@ function get_basic_elements() {
     $elements = array(
         'title'       => array(
             'type'         => 'text',
-            'title'        => get_string('title', 'view'),
+            'title'        => get_string('title','view'),
             'defaultvalue' => $view->get('title'),
-            'rules'        => array('required' => true),
+            'rules'        => array( 'required' => true ),
             'autoselect'   => $new,
         ),
         'description' => array(
             'type'         => 'textarea',
-            'title'        => get_string('description', 'view'),
+            'title'        => get_string('description','view'),
             'rows'         => 5,
             'cols'         => 70,
             'class'        => 'view-description',
@@ -376,179 +317,9 @@ function get_basic_elements() {
     return $elements;
 }
 
-/**
- * Get pieform elements for activity config
- *
- * This will be part of 'page settings'
- */
-function get_view_activity_info_elements(int $outcome_id): array {
-    global $USER, $view, $group;
-    require_once(get_config('docroot') . 'lib/pieforms/pieform/elements/container.php');
-
-    $admin_tutor_ids = group_get_member_ids($group, array('admin', 'tutor'));
-
-    $activity = get_record('view_activity', 'view', $view->get('id'));
-    $activity = $activity ? $activity : new stdClass();
-    $elements = array();
-
-    $elements['activity_description'] = array(
-        'type'         => 'textarea',
-        'title'        => get_string('activity_info_title', 'view'),
-        'description'  => get_string('activity_info_desc', 'view'),
-        'rows'         => 5,
-        'cols'         => 70,
-        'rules'        => array('maxlength' => 1000000, 'required' => true),
-        'defaultvalue' => property_exists($activity, 'description')
-        && (trim($activity->description)) ? $activity->description : '',
-    );
-
-    $outcome_subjects = get_records_sql_array("SELECT os.*, osc.name FROM {outcome_subject} os
-                                               JOIN {outcome_subject_category} osc ON os.outcome_subject_category = osc.id");
-    $subjects_ids = $subjects_names = array();
-    foreach ($outcome_subjects as $subject) {
-        $subjects_ids[] = $subject->id;
-        $subjects_names[] = $subject->name . ' - ' . $subject->title;
-    }
-    $subjects_options =  array_combine($subjects_ids, $subjects_names);
-
-    $elements['subject'] = array(
-        'type'         => 'select',
-        'title'        => get_string('activity_info_subject', 'view'),
-        'description'  => get_string('activity_info_subject_desc', 'view'),
-        'rows'         => 5,
-        'cols'         => 70,
-        'required'     => true,
-        'options' => $subjects_options,
-        'defaultvalue' => property_exists($activity, 'subject')  ? $activity->subject : key($subjects_options),
-    );
-
-    $supervisor_options = array();
-    foreach ($admin_tutor_ids as $id) {
-        $supervisor_options[$id] = display_name($id);
-    }
-
-    $elements['supervisor'] = array(
-        'type' => 'select',
-        'title' => get_string('activity_info_supervisor', 'view'),
-        'description' => get_string('activity_info_activity_info_supervisor_desc', 'view'),
-        'options' => $supervisor_options,
-        'defaultvalue' => property_exists($activity, 'supervisor') ? $activity->supervisor : $USER->id
-    );
-
-    $elements['startdate'] = array(
-        'type' => 'calendar',
-        'title' => get_string('activity_info_start_date', 'view'),
-        'description' => get_string('activity_info_start_date_desc', 'view'),
-        'defaultvalue' => property_exists($activity, 'start_date') ? strtotime($activity->start_date) : null,
-    );
-
-    $elements['enddate'] = array(
-        'type' => 'calendar',
-        'title' => get_string('activity_info_end_date', 'view'),
-        'description' => get_string('activity_info_end_date_desc', 'view'),
-        'defaultvalue' => property_exists($activity, 'end_date') ? strtotime($activity->end_date) : null,
-    );
-
-    $elements['achievement_levels_title'] = [
-        'type' => 'html',
-        'value' => '
-        <h3>' . get_string('activity_info_achievement_levels', 'view') . '</h3>
-        <div class="description"><span class="description">' . get_string('activity_info_achievement_levels_desc', 'view') .
-        '</span></div>
-        ',
-        'class' => 'form-group-no-border'
-    ];
-
-    $elements['achievement_levels'] = [
-        'type' => 'fieldset',
-        'columns' => get_string('activity_info_achievement_levels_desc', 'view'),
-        'elements' => get_achievement_levels_elements($activity->id ?? null),
-    ];
-
-    // Outcome ID first comes in when we click 'Add activity' passed in as an argument, but after the
-    // activity is created, we get the outcome through the activity in the db.
-    $hidden_elements = array(
-        'outcome' => array(
-            'type' => 'hidden',
-            'value' =>  $outcome_id > 0 ? $outcome_id
-                : get_field('outcome_view_activity', 'outcome', 'activity', $activity->id),
-        ),
-    );
-
-    return [$elements, $hidden_elements];
-}
-
-/**
- * Get_achievement levels pieform elements
- *
- * @param  mixed $activity_id
- * @return array
- */
-function get_achievement_levels_elements(int $activity_id = null): array {
-    $num_achievement_levels = 4; // Four by default
-    $achievement_levels = []; // type => value
-
-    // If there are existing achievement levels, update the number of achievement levels
-    if (count($achievement_levels) > 0) {
-        // Resort the achievement levels and point to the strings
-        $num_achievement_levels = count($achievement_levels);
-    }
-
-    // Get the type and value for achievement levels
-    for ($i = 0; $i < $num_achievement_levels; $i++) {
-        $level_type = $i + 1;
-        $value = '';
-
-        // Set the last achievement level value to be 'Not demonstrated' by default
-        if ($i === $num_achievement_levels - 1) {
-            $value = get_string('activity_info_achievement_level_0','view');
-        }
-
-        // Populate the achievement levels if the they exist
-        if ($activity_id) {
-            $value =  get_field(
-                'view_activity_achievement_levels',
-                'value',
-                'activity',
-                $activity_id,
-                'type',
-                $level_type
-                // The string 'Level' will be appended to display on the form.
-                // Update the lang string to change the verbiage.
-            );
-        }
-        $achievement_levels[$level_type] = $value;
-    }
-
-    // Construct the pieform for achievement levels
-    $achievement_levels_elements = [];
-    $lowest_type = array_keys($achievement_levels)[count($achievement_levels)-1]; // get array key last
-    foreach ($achievement_levels as $level_type => $value) {
-        $default_value = $level_type === $lowest_type ? 'Not demonstrated' : '';
-        $achievement_levels_elements[$level_type] = [
-            'type' => 'text',
-            // 'title' => get_string('activity_info_achievement_' . $level_type, 'view') . '<span></span>',
-            'defaultvalue' => $value != '' ? $value : $default_value,
-            'disabled' => $level_type == $lowest_type ? 1 : 0,
-            'labelhtml' =>
-            get_string('level_cap', 'artefact.checkpoint') .
-            '
-            <span aria-label="' . $level_type . '">
-            <span class="icon-stack" style="vertical-align: centre;">
-                <i class="icon-regular icon-circle icon-stack-2x"></i>
-                <i class="icon-solid icon-' . $level_type . ' icon-stack-1x"></i>
-            &nbsp;&nbsp;&nbsp;
-            </span>
-            '
-        ];
-    }
-    return $achievement_levels_elements;
-}
-
 function get_advanced_elements(): array {
     global $view, $urlallowed, $group, $institution, $USER, $cleanurlbase;
 
-    $inlinejs = '';
     $formatstring = '%s (%s)';
     $ownerformatoptions = array(
         View::FORMAT_NAME_FIRSTNAME => sprintf($formatstring, get_string('firstname'), $USER->get('firstname')),
@@ -569,17 +340,17 @@ function get_advanced_elements(): array {
     if ($view->is_instruction_locked()) {
         if (!empty($view->get('instructions'))) {
             $elements['instructions'] = array(
-                'type'         => 'html',
-                'title'        => get_string('instructions', 'view'),
-                'class'        => 'view-description',
-                'value'        => clean_html($view->get('instructions')),
+              'type'         => 'html',
+              'title'        => get_string('instructions','view'),
+              'class'        => 'view-description',
+              'value'        => clean_html($view->get('instructions')),
             );
         }
     }
     else {
         $elements['instructions'] = array(
             'type'         => 'wysiwyg',
-            'title'        => get_string('instructions', 'view'),
+            'title'        => get_string('instructions','view'),
             'rows'         => 5,
             'cols'         => 70,
             'class'        => 'view-description',
@@ -623,8 +394,8 @@ function get_advanced_elements(): array {
         }
         $elements['ownerformat'] = array(
             'type'         => 'select',
-            'title'        => get_string('ownerformat', 'view'),
-            'description'  => get_string('ownerformatdescription', 'view'),
+            'title'        => get_string('ownerformat','view'),
+            'description'  => get_string('ownerformatdescription','view'),
             'options'      => $ownerformatoptions,
             'defaultvalue' => $default,
             'rules'        => array('required' => true),
@@ -633,8 +404,8 @@ function get_advanced_elements(): array {
     if (get_config('allowanonymouspages')) {
         $elements['anonymise'] = array(
             'type'         => 'switchbox',
-            'title'        => get_string('anonymise', 'view'),
-            'description'  => get_string('anonymisedescription', 'view'),
+            'title'        => get_string('anonymise','view'),
+            'description'  => get_string('anonymisedescription','view'),
             'defaultvalue' => $view->get('anonymise'),
         );
     }
@@ -654,7 +425,7 @@ function get_advanced_elements(): array {
         'group'        => $group,
         'page'         => $view->get_url() . '&browse=1',
         'filters'      => array(
-            'artefacttype' => array('image'),
+             'artefacttype' => array('image'),
         ),
         'config'       => array(
             'upload'          => true,
@@ -674,11 +445,11 @@ function get_advanced_elements(): array {
 
     if (!$view->is_instruction_locked()) { //later i'll need to check the role of the login user
         $elements['locktemplate'] = array(
-            'type'         => 'switchbox',
-            'title'        => get_string('locktemplate', 'view'),
-            'description'  => get_string('locktemplatedescription', 'view'),
-            'defaultvalue' => $view->get('locktemplate'),
-            'disabled'     => !$view->can_edit_template(),
+          'type'         => 'switchbox',
+          'title'        => get_string('locktemplate','view'),
+          'description'  => get_string('locktemplatedescription','view'),
+          'defaultvalue' => $view->get('locktemplate'),
+          'disabled'     => !$view->can_edit_template(),
         );
     }
     else {
@@ -703,55 +474,6 @@ function get_advanced_elements(): array {
             'description' => $description,
         );
     }
-
-    // If the view is a submitted copy of a Portfoilio, link to the original.
-    $submissionorigin = $view->get_submission_origin();
-    if ($submissionorigin !== false) {
-        if ($submissionorigin != 0) {
-            $original = new View($submissionorigin);
-            // Are we part of a collection?
-            $originalcollection = $original->get_collection();
-            if ($originalcollection) {
-                // Link to the original collection.
-                $title = $originalcollection->get('name');
-                $url = $originalcollection->get_url();
-            }
-            else {
-                // Link to the original view.
-                $title = $original->get('title');
-                $url = $original->get_url();
-            }
-            $value = get_string('linktosubmissionoriginallink', 'view', $url, $title);
-            $description = get_string('linktosubmissionoriginaldescription', 'view');
-        }
-        else {
-            // The original has been deleted.
-            $value = get_string('linktosubmissionoriginaldeleted', 'view');
-            $description = get_string('linktosubmissionoriginaldeleteddescription', 'view');
-        }
-        $elements['linktosourceportfolio'] = array(
-            'type'  => 'html',
-            'title' => get_string('linktosubmissionoriginaltitle', 'view'),
-            'value' => $value,
-            'description' => $description,
-            'class' => 'form-group-no-border',
-        );
-        $isinacollection = $view->collection_id();
-        if ($isinacollection) {
-            $description = get_string('linkedtosourceportfoliodescriptioninacollection', 'view');
-        }
-        else {
-            $description = get_string('linkedtosourceportfoliodescription', 'view');
-        }
-        $elements['linkedtosourceportfolio'] = array(
-            'type'         => 'switchbox',
-            'title'        => get_string('linkedtosourceportfoliotitle','view'),
-            'description'  => $description,
-            'defaultvalue' => 1,
-            'disabled'     => $isinacollection,
-        );
-    }
-
     // give possibility to unlock the view to some roles
     // site admins in institution and site pages
     // institution admins in institution pages
@@ -775,21 +497,13 @@ function get_advanced_elements(): array {
         }
         if ($canremovelock) {
             $elements['copylocked'] = array(
-                'type'         => 'switchbox',
-                'title'        => get_string('copylocked', 'view'),
-                'description'  => get_string('copylockeddescription', 'view'),
-                'defaultvalue' => $view->is_instruction_locked(),
+              'type'         => 'switchbox',
+              'title'        => get_string('copylocked','view'),
+              'description'  => get_string('copylockeddescription','view'),
+              'defaultvalue' => $view->is_instruction_locked(),
             );
         }
     }
-
-    list($signoff_elements, $signoff_js) = get_signoff_elements();
-    $inlinejs .= $signoff_js;
-    $elements['sign_off'] = array(
-        'type'         => 'fieldset',
-        'title'        => get_string('signoff', 'view'),
-        'elements' => $signoff_elements
-    );
 
     // Theme dropdown
     $theme = $view->set_user_theme();
@@ -812,7 +526,7 @@ function get_advanced_elements(): array {
         );
     };
 
-    $inlinejs .= <<<EOF
+    $inlinejs = <<<EOF
 function settings_callback(form, data) {
     settings_coverimage.callback(form, data);
 };
@@ -855,7 +569,7 @@ function get_skin_elements(): array {
             'description' => nl2br($currentskin->description),
             'ctime' => format_date(strtotime($currentskin->ctime)),
             'mtime' => format_date(strtotime($currentskin->mtime)),
-        );
+         );
     }
 
     $userskins   = Skin::get_user_skins();
@@ -877,7 +591,7 @@ function get_skin_elements(): array {
     $snippet->assign('currenttitle', $currentskin->title);
     $snippet->assign('currentmetadata', (!empty($currentskin->metadata)) ? $currentskin->metadata : null);
     $snippet->assign('userskins', $userskins);
-    $snippet->assign('favorskins', $favorskins);
+    $snippet->assign('favorskins',$favorskins);
     $snippet->assign('siteskins', $siteskins);
     $snippet->assign('defaultskin', $defaultskin);
     $snippet->assign('viewid', $view->get('id'));
@@ -920,63 +634,6 @@ JAVASCRIPT;
     return array($skinform, $hiddenelements, $inlinejs);
 }
 
-/**
- * Fetch the signoff and verify field elements for the edit form
- *
- * This includes the pieform elements and the related javascript needed
- * @return array
- */
-function get_signoff_elements(): array {
-    global $view;
-    safe_require('artefact', 'peerassessment');
-    // For sign-off/verify config that came from a template, disable editing the config.
-    $is_from_template = $view->get_original_template();
-
-    // Sign-off only when the institution you are part of has portfolio completion on
-    $signoff_record = get_record('view_signoff_verify', 'view', $view->get('id'));
-    $show_verify = $signoff_record && $signoff_record->show_verify;
-
-    $elements = array(
-        'signoff' => array(
-            'type' => 'switchbox',
-            'title' => get_string('signoff', 'view'),
-            'description' => get_string('signoffdesc', 'view'),
-            'defaultvalue' => (bool) $signoff_record,
-            'disabled' => $is_from_template,
-            'class' => 'form-group-no-border',
-        ),
-        'verify' => array(
-            'type' => 'switchbox',
-            'title' => get_string('verify', 'view'),
-            'description' => get_string('verifydesc1', 'view'),
-            'defaultvalue' => $show_verify ?: 0,
-            'disabled' => !$signoff_record || $is_from_template,
-        ),
-    );
-
-    // Allow verify switch to be set only when sign-off is set to true.
-    $js = '
-        jQuery(function ($) {
-            $("#settings_signoff").on("click", function () {
-                if (this.checked) {
-                    $("#settings_verify").prop("disabled", false);
-                    if (!$("#editgroup_request").attr("checked")) {
-                        $("#editgroup_suggestfriends").prop("checked", false);
-                        $("#editgroup_suggestfriends").prop("disabled", true);
-                    }
-                }
-                else {
-                    $("#settings_verify").prop("checked", false);
-                    $("#settings_verify").prop("disabled", true);
-                }
-            });
-        });
-    ';
-
-    return [$elements, $js];
-}
-
-
 function settings_validate(Pieform $form, $values) {
     global $view, $issiteview, $issitetemplate, $canuseskins;
 
@@ -998,10 +655,6 @@ function settings_validate(Pieform $form, $values) {
             throw new AccessDeniedException();
         }
     }
-
-    if ($view->get('type') == 'activity') {
-        validate_view_activity_info($form, $values);
-    }
 }
 
 function settings_submit(Pieform $form, $values) {
@@ -1010,7 +663,6 @@ function settings_submit(Pieform $form, $values) {
     if ($canedittitle) {
         set_view_title_and_description($form, $values);
         set_view_advanced($form, $values);
-        set_signoff_verify($form, $values);
     }
 
     if ($canuseskins && isset($values['skinid'])) {
@@ -1025,14 +677,6 @@ function settings_submit(Pieform $form, $values) {
         else {
             $view->unlock_instructions_edit();
         }
-    }
-    if (isset($values['linkedtosourceportfolio']) && $values['linkedtosourceportfolio'] == 0) {
-        // Set submissionoriginal to 0 to unlink the view from the source portfolio.
-        $view->set('submissionoriginal', 0);
-    }
-
-    if ($view->get('type') == 'activity' && !$issitetemplate) {
-        set_view_activity_info($form, $values);
     }
 
     $view->commit();
@@ -1050,7 +694,7 @@ function settings_submit(Pieform $form, $values) {
     $form->reply(PIEFORM_OK, $result);
 }
 
-function create_block($bt, $configdata, $view, $blockinfo = null, $dimension = null) {
+function create_block($bt, $configdata, $view, $blockinfo = null, $dimension=null) {
     $tagselect = array();
 
     if ($bt == 'taggedposts') {
@@ -1061,7 +705,7 @@ function create_block($bt, $configdata, $view, $blockinfo = null, $dimension = n
     $bi = new BlockInstance(0, array('blocktype' => $bt, 'view' => $view->get('id')));
     $blocktypeclass = generate_class_name('blocktype', $bt);
     if (method_exists($blocktypeclass, 'get_instance_title')) {
-        $title = $blocktypeclass::get_instance_title($bi);
+        $title = call_static_method($blocktypeclass, 'get_instance_title', $bi);
         $defaulttitle = false;
     }
     else {
@@ -1153,7 +797,7 @@ function set_view_title_and_description(Pieform $form, $values) {
                         $combineddata[$item->type][$type] = array('count' => 1, 'ids' => array($item->id));
                     }
                     else {
-                        $combineddata[$item->type][$type]['count']++;
+                        $combineddata[$item->type][$type]['count'] ++;
                         $combineddata[$item->type][$type]['ids'][] = $item->id;
                     }
                 }
@@ -1161,16 +805,16 @@ function set_view_title_and_description(Pieform $form, $values) {
                 if (!empty($combineddata['blocktype'])) {
                     foreach ($combineddata['blocktype'] as $bk => $bv) {
                         $bt = false;
-                        foreach ($bv['ids'] as $bid) {
+                        foreach($bv['ids'] as $bid) {
                             $configdata = unserialize(get_field('block_instance', 'configdata', 'id', $bid));
                             $tags = get_column('tag', 'tag', 'resourcetype', 'blocktype', 'resourceid', $bid);
-                            foreach ($tags as &$t) {
+                            foreach($tags as &$t) {
                                 if (preg_match('/^tagid\_(.*)/', $t, $matches)) {
-                                    if ($itag = get_record('tag', 'id', $matches[1])) {
-                                        $instname = get_field('institution', 'displayname', 'id', $itag->resourceid);
-                                        $t = $instname . ': ' . $itag->tag;
-                                    }
-                                }
+                                     if ($itag = get_record('tag', 'id', $matches[1])) {
+                                         $instname = get_field('institution', 'displayname', 'id', $itag->resourceid);
+                                         $t = $instname . ': ' . $itag->tag;
+                                      }
+                                  }
                             }
                             $dimension = get_record('block_instance_dimension', 'block', $bid);
                             $id = create_block($bk, $configdata, $view, array('oldid' => $bid, 'tags' => $tags), $dimension);
@@ -1197,14 +841,13 @@ function set_view_title_and_description(Pieform $form, $values) {
                         }
                         if ($ak == 'html') { // This is an artefact related to the 'note' block (not 'html' block)
                             // Need to do a loop for each folder
-                            foreach ($av['ids'] as $noteid) {
+                            foreach($av['ids'] as $noteid) {
                                 // Need to add a note block
                                 $bt = 'textbox';
-                                $configdata = array(
-                                    'artefactid' => $noteid,
-                                    'licensereadonly' => '', // default license placeholder
-                                    'tagsreadonly' => '', // default tag placeholder
-                                );
+                                $configdata = array('artefactid' => $noteid,
+                                                    'licensereadonly' => '', // default license placeholder
+                                                    'tagsreadonly' => '', // default tag placeholder
+                                                   );
                                 // We need to get an example of an existing note (textbox) block to find out
                                 // if there are meant to be attachments for the note
                                 // @TODO: fix this up - we should have a artefact_note_attachment table rather than
@@ -1226,14 +869,13 @@ function set_view_title_and_description(Pieform $form, $values) {
                         }
                         if ($ak == 'blog') {
                             // Need to do a loop for each folder
-                            foreach ($av['ids'] as $blogid) {
+                            foreach($av['ids'] as $blogid) {
                                 // Need to add a blog block
                                 $bt = 'blog';
-                                $configdata = array(
-                                    'artefactid' => $blogid,
-                                    'count' => '5', // default number of posts to display
-                                    'copytype' => 'nocopy', // default copy type
-                                );
+                                $configdata = array('artefactid' => $blogid,
+                                                    'count' => '5', // default number of posts to display
+                                                    'copytype' => 'nocopy', // default copy type
+                                                   );
                                 $id = create_block($bt, $configdata, $view);
                             }
                             $bt = false;
@@ -1241,22 +883,20 @@ function set_view_title_and_description(Pieform $form, $values) {
                         if ($ak == 'blogpost') {
                             // Need to add a taggedpost block
                             $bt = 'taggedposts';
-                            $configdata = array(
-                                'tagselect' => $createtags,
-                                'count' => '10', // default number of posts to display
-                                'copytype' => 'nocopy', // default copy type
-                                'full' => false,
-                            );
+                            $configdata = array('tagselect' => $createtags,
+                                                'count' => '10', // default number of posts to display
+                                                'copytype' => 'nocopy', // default copy type
+                                                'full' => false,
+                                               );
                         }
                         if ($ak == 'folder') {
                             // Need to do a loop for each folder
-                            foreach ($av['ids'] as $folderid) {
+                            foreach($av['ids'] as $folderid) {
                                 // Need to add a folder block
                                 $bt = 'folder';
-                                $configdata = array(
-                                    'artefactid' => $folderid,
-                                    'sortorder' => 'asc',
-                                );
+                                $configdata = array('artefactid' => $folderid,
+                                                    'sortorder' => 'asc',
+                                                   );
                                 $id = create_block($bt, $configdata, $view);
                             }
                             $bt = false;
@@ -1284,33 +924,30 @@ function set_view_title_and_description(Pieform $form, $values) {
                             else {
                                 // Need to add a pdf block
                                 $bt = 'pdf';
-                                $configdata = array(
-                                    'artefactid' => $av['ids'][0],
-                                    'pdfwarning' => get_string('pdfwarning', 'blocktype.file/pdf'),
-                                );
+                                $configdata = array('artefactid' => $av['ids'][0],
+                                                    'pdfwarning' => get_string('pdfwarning', 'blocktype.file/pdf'),
+                                                   );
                             }
                         }
                         if ($ak == 'image') {
                             if ($av['count'] > 1) {
                                 // Need to add an image gallery block
                                 $bt = 'gallery';
-                                $configdata = array(
-                                    'artefactids' => $av['ids'],
-                                    'user' => $view->get('owner'), // normally 'user' is for external gallery but we set it to page owner for internal gallery
-                                    'select' => '1', // to select images by ids
-                                    'style' => '1',  // to display the images as slideshow
-                                    'showdescription' => false,
-                                    'width' => '75', // the default value added to config form
-                                );
+                                $configdata = array('artefactids' => $av['ids'],
+                                                    'user' => $view->get('owner'), // normally 'user' is for external gallery but we set it to page owner for internal gallery
+                                                    'select' => '1', // to select images by ids
+                                                    'style' => '1',  // to display the images as slideshow
+                                                    'showdescription' => false,
+                                                    'width' => '75', // the default value added to config form
+                                                   );
                             }
                             else {
                                 // Need to add an image block
                                 $bt = 'image';
-                                $configdata = array(
-                                    'artefactid' => $av['ids'][0],
-                                    'showdescription' => false,
-                                    'width' => "",
-                                );
+                                $configdata = array('artefactid' => $av['ids'][0],
+                                                    'showdescription' => false,
+                                                   'width' => "",
+                                                   );
                             }
                         }
                         if ($bt) {
@@ -1321,10 +958,9 @@ function set_view_title_and_description(Pieform $form, $values) {
                     // We add the plan block now
                     if (!empty($plans)) {
                         $bt = 'plans';
-                        $configdata = array(
-                            'artefactids' => $plans,
-                            'count' => 10, // default tasks
-                        );
+                        $configdata = array('artefactids' => $plans,
+                                            'count' => 10, // default tasks
+                                           );
                         $id = create_block($bt, $configdata, $view);
                     }
                     // We add in the file to download block once we work out what should be in it
@@ -1360,159 +996,6 @@ function set_view_title_and_description(Pieform $form, $values) {
     }
 }
 
-/**
- * Validate the activity
- *
- * @param Pieform $form
- * @param array $values
- * @return void
- */
-function validate_view_activity_info(Pieform $form, $values) {
-    if (isset($values['startdate']) && isset($values['enddate']) && $values['startdate'] > $values['enddate']) {
-        $form->set_error('startdate', get_string('startdate_rule', 'view'));
-    }
-}
-
-/**
- * Save the activity page information
- *
- * @param Pieform $form
- * @param array $values
- * @return void
- */
-function set_view_activity_info(Pieform $form, $values) {
-    global $view;
-    // Required function for pieform
-
-    $view_activity = new StdClass();
-    $view_activity->description = $values['activity_description'];
-    $view_activity->subject = $values['subject'];
-    $view_activity->supervisor = $values['supervisor'];
-    $view_activity->start_date =  !is_null($values['startdate']) ? db_format_timestamp($values['startdate']) : null;
-    $view_activity->end_date = !is_null($values['enddate']) ? db_format_timestamp($values['enddate']) : null;
-    $view_activity->view = $view->get('id');
-    $view_activity->mtime = db_format_timestamp(time());
-
-    save_activity_data($values);
-}
-
-/**
- * Save activity data
- *
- * @param  mixed $values from form
- * @return void
- */
-function save_activity_data($values = [], $outcome = 0, $view_id = 0) {
-    global $view, $USER;
-
-    if (!$view && $view_id) {
-        $view = new View($view_id);
-    }
-
-    // Default values for pre-saving activity
-    $admin_tutor_ids = group_get_member_ids($view->get('group'), array('admin', 'tutor'));
-    $outcome_subjects = get_records_array('outcome_subject');
-    $subjects_ids = array();
-    foreach ($outcome_subjects as $subject) {
-        $subjects_ids[] = $subject->id;
-    }
-
-    $view_activity = (object) array(
-        'description' => ' ',
-        'subject' => $subjects_ids[0],
-        'supervisor' => in_array($USER->id, $admin_tutor_ids) ? $USER->id : $admin_tutor_ids[0],
-        'start_date' => null,
-        'end_date' => null
-
-    );
-
-    if ($values) {
-        $view_activity->description = $values['activity_description'];
-        $view_activity->subject = $values['subject'];
-        $view_activity->supervisor = $values['supervisor'];
-        $view_activity->start_date =  !is_null($values['startdate']) ? db_format_timestamp($values['startdate']) : null;
-        $view_activity->end_date = !is_null($values['enddate']) ? db_format_timestamp($values['enddate']) : null;
-    }
-
-    $view_activity->view = $view->get('id');
-    $view_activity->mtime = db_format_timestamp(time());
-
-    // Add to view_actitvity table
-    $activity_id = get_field('view_activity', 'id', 'view', $view->get('id'));
-    if (!$activity_id) {
-        $view_activity->ctime = db_format_timestamp(time());
-        $activity_id = insert_record('view_activity', $view_activity, 'id', true);
-
-        // link activity to outcome
-        $outcome_activity = new StdClass();
-        $outcome_activity->outcome = $values['outcome'] ?? $outcome;
-        $outcome_activity->activity = $activity_id;
-        insert_record('outcome_view_activity', $outcome_activity);
-
-    }
-    else {
-        update_record('view_activity', $view_activity, array('view' => $view->get('id')));
-    }
-
-    // Achievement levels done by type and value
-    // Brand new activity + achievement levels
-    // If there are more achievement levels than 4,
-    // their string needs to be created/and existing ones overwritten if don't want to say 'Level 1'
-    $achievement_levels = get_levels($values);
-
-    // Go through each one to insert/update
-    foreach ($achievement_levels as $type => $value) {
-        $existing_achievement_level = get_record(
-            'view_activity_achievement_levels',
-            'activity',
-            $activity_id,
-            'type',
-            $type
-        );
-        if ($existing_achievement_level) {
-            $existing_achievement_level->value = $value;
-            update_record('view_activity_achievement_levels', $existing_achievement_level);
-        }
-        else {
-            $new_achievement_level = new StdClass();
-            $new_achievement_level->activity = $activity_id;
-            $new_achievement_level->type = $type;
-            $new_achievement_level->value = $value;
-            insert_record('view_activity_achievement_levels', $new_achievement_level);
-        }
-    }
-}
-
-/**
- * Get activity level
- *
- * @param array $values
- * @return array
- */
-function get_levels(array $values) {
-    $levels = [];
-    foreach ($values as $type => $value) {
-        if (is_int($type) !== false) {
-            $levels[$type] = $value;
-        }
-    }
-    if (empty($levels)) {
-        // no levels supplied so we use the default ones
-        $levels = array(1 => get_string('activity_info_achievement_level', 'view', 1),
-                        2 => get_string('activity_info_achievement_level', 'view', 2),
-                        3 => get_string('activity_info_achievement_level', 'view', 3),
-                        4 => get_string('activity_info_achievement_level_0', 'view'));
-    }
-    return $levels;
-}
-
-/**
- * Set advanced information
- *
- * @param Pieform $form
- * @param array $values
- * @return void
- */
 function set_view_advanced(Pieform $form, $values) {
     global $view, $urlallowed, $new;
 
@@ -1538,32 +1021,6 @@ function set_view_advanced(Pieform $form, $values) {
     }
 }
 
-/**
- * Set sign-off and verify config for signing off and verifying pages
- *
- * @param  Pieform $form
- * @param  array $values
- * @return void
- */
-function set_signoff_verify(Pieform $form, $values) {
-    global $view;
-    $view_id = $view->get('id');
-    if (!in_array('signoff', $values)) {
-        return;
-    }
-    $show_signoff = $values['signoff'] ? 1 : 0;
-    $show_verify = $values['verify'] ? 1 : 0;
-    $dataobj = (object) [
-        'view' => $view->get('id'),
-    ];
-    if ($show_signoff) {
-        ensure_record_exists('view_signoff_verify', $dataobj, $dataobj, 'id', true);
-        set_field('view_signoff_verify', 'show_verify', $show_verify, 'view', $view_id);
-    }
-    else {
-        execute_sql("DELETE FROM {view_signoff_verify} WHERE view = ?", [$view_id]);
-    }
-}
 
 function add_view_coverimage($coverimageid) {
     global $view;
@@ -1572,7 +1029,7 @@ function add_view_coverimage($coverimageid) {
     }
 }
 
-function delete_view_coverimage($coverimageid = null) {
+function delete_view_coverimage($coverimageid=null) {
     global $view;
     if ($view) {
         $view->set('coverimage', 0);

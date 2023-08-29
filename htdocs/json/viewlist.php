@@ -26,7 +26,7 @@ $can_edit = false;
 $role = '';
 
 if (!empty($groupid)) {
-    define('PUBLIC_ACCESS', 1);
+    define('PUBLIC', 1);
     define('GROUP', param_integer('group'));
     require_once(get_config('docroot') . 'lib/group.php');
     $group = group_current_group();
@@ -70,9 +70,6 @@ if (!empty($groupid)) {
                     }
                     if ($collobj->has_progresscompletion()) {
                         $item['progresscompletion'] = $collobj->collection_nav_progresscompletion_option();
-                    }
-                    if ($collobj->has_outcomes()) {
-                        $item['outcomes'] = $collobj->collection_nav_outcomes_option();
                     }
                 }
             }

@@ -50,14 +50,14 @@ Scenario: SmartEvidence interaction by member / staff
     | Collection name | SmartEvidence Collection 1 |
     | Collection description | SmartEvidence Collection 1 description |
     And I select "Title of your framework" from "SmartEvidence framework"
-    And I click on "Continue: Edit collection pages"
+    And I click on "Next: Edit collection pages"
     And I click on "All"
     And I click on "Add pages"
-    When I click on "Continue: Share"
+    When I click on "Next: Edit access"
     Then I click on "Return to portfolios"
 
     # Mahara member makes page visible to public
-    And I click on "Manage sharing" in "SmartEvidence Collection 1" card access menu
+    And I click on "Manage access" in "SmartEvidence Collection 1" card access menu
     And I select "Public" from "accesslist[0][searchtype]"
     And I click on "Save"
     # Mahara member must make comment on competencies before it can be accessed by admin/staff

@@ -11,7 +11,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('MENUITEM', 'engage/index');
 define('MENUITEM_SUBPAGE', 'forums');
 define('SECTION_PLUGINTYPE', 'interaction');
@@ -320,7 +320,6 @@ if ($publicgroup) {
 }
 
 $smarty = smarty(array(), $headers);
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('heading', $forum->groupname);
 $smarty->assign('subheading', $forum->title);
 $smarty->assign('headingclass', 'page-header');

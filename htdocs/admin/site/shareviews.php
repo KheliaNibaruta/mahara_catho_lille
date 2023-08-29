@@ -19,7 +19,7 @@ define('TITLE', get_string('share', 'view'));
 $accesslists = View::get_accesslists(null, null, 'mahara');
 
 $smarty = smarty();
-setpageicon($smarty, 'icon-share-nodes');
+setpageicon($smarty, 'icon-share-alt');
 
 $smarty->assign('accesslists', $accesslists);
 $smarty->display('view/share.tpl');

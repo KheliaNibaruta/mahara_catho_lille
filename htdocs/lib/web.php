@@ -265,7 +265,7 @@ function smarty($javascript = array(), $headers = array(), $pagestrings = array(
     // as it doesn't work on some of them and can
     // disable the editing of a textarea field
     if (is_html_editor_enabled()) {
-        $header_resources = array(&$javascript, &$headers);
+        $checkarray = array(&$javascript, &$headers);
         $found_tinymce = false;
         $tinymceviewid = 'null';
         if ($inpersonalarea = user_personal_section()) {
@@ -276,13 +276,13 @@ function smarty($javascript = array(), $headers = array(), $pagestrings = array(
             }
         }
 
-        foreach ($header_resources as &$resource) {
-            if (($key = array_search('tinymce', $resource)) !== false || ($key = array_search('tinytinymce', $resource)) !== false) {
+        foreach ($checkarray as &$check) {
+            if (($key = array_search('tinymce', $check)) !== false || ($key = array_search('tinytinymce', $check)) !== false) {
                 if (!$found_tinymce) {
-                    $found_tinymce = $resource[$key];
+                    $found_tinymce = $check[$key];
                     $javascript_array[] = $wwwroot . 'artefact/file/js/filebrowser.js';
                     $javascript_array[] = $jsroot . 'switchbox.js';
-                    $javascript_array[] = $wwwroot . 'node_modules/tinymce/tinymce.js';
+                    $javascript_array[] = $jsroot . 'tinymce/tinymce.js';
                     $stylesheets = array_merge($stylesheets, array_reverse(array_values($THEME->get_url('style/tinymceskin.css', true))));
                     $content_css = json_encode($THEME->get_url('style/tinymce.css'));
                     $language = current_language();
@@ -315,13 +315,14 @@ function smarty($javascript = array(), $headers = array(), $pagestrings = array(
                     $mathslateplugin = !empty($mathslate) ? ',' . $mathslate : '';
                     $toolbar = array(
                         null,
-                        '"toolbar_toggle | imagebrowser | table | fullscreen | undo redo | formatselect | bold italic | bullist numlist | link unlink "',
-                        '" underline strikethrough subscript superscript | alignleft aligncenter alignright alignjustify | outdent indent | forecolor backcolor | ltr rtl"',
-                        '"fontselect | fontsizeselect | emoticons nonbreaking charmap ' . $mathslate . ' ' . $spellchecker_toolbar . ' | removeformat pastetext | anchor | code"',
+                        '"toolbar_toggle | formatselect | bold italic | bullist numlist | link unlink | imagebrowser | undo redo"',
+                        '"underline strikethrough subscript superscript | alignleft aligncenter alignright alignjustify | outdent indent | forecolor backcolor | ltr rtl | fullscreen"',
+                        '"fontselect | fontsizeselect | emoticons nonbreaking charmap ' . $mathslate . ' ' . $spellchecker_toolbar . ' | table | removeformat pastetext | anchor | code"',
                     );
 
                     // For right-to-left langs, reverse button order & align controls right.
                     $tinymce_langdir = $langdirection == 'rtl' ? 'rtl' : 'ltr';
+                    $toolbar_align = 'left';
 
                     // Language strings required for TinyMCE
                     $pagestrings['mahara'] = isset($pagestrings['mahara']) ? $pagestrings['mahara'] : array();
@@ -329,66 +330,68 @@ function smarty($javascript = array(), $headers = array(), $pagestrings = array(
 
                     $tinymceinitbehatsetup = '';
                     $tinymcebehatsetup = '';
-                    $tinymceconfig = '';
                     if (defined('BEHAT_TEST')) {
                         $tinymceinitbehatsetup = 'window.isEditorInitializing = false;';
                         $tinymcebehatsetup = <<<EOF
-                                ed.on('PreInit', function(ed) {
-                                    window.isEditorInitializing = true;
-                                });
-                        EOF;
+        ed.on('PreInit', function(ed) {
+            window.isEditorInitializing = true;
+        });
+EOF;
                     }
 
-                    if ($resource[$key] == 'tinymce') {
+                    if ($check[$key] == 'tinymce') {
                         $tinymceconfig = <<<EOF
-                            theme: "silver",
-                            browser_spellcheck: true,
-                            contextmenu: false,
-                            plugins: "quickbars,tooltoggle,autoresize,fullscreen,visualblocks,wordcount,link,lists,imagebrowser,table,emoticons{$spellchecker},paste,code,fullscreen,directionality,searchreplace,nonbreaking,charmap{$mathslateplugin},anchor",
-                            skin: 'oxide',
-                            // default: 'fullscreen | undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | outdent indent',
-                            toolbar1: {$toolbar[1]},
-                            toolbar2: {$toolbar[2]},
-                            toolbar3: {$toolbar[3]},
-                            menubar: false,
-                            fix_list_elements: true,
-                            image_advtab: true,
-                            table_style_by_css: true,
-                            quickbars_selection_toolbar: 'bold italic | formatselect | link unlink | bullist',
-                            // If you want to have image browser and quick table as default option at each new line,
-                            // uncomment the next line and set quick_bars_insert_toolbar: true,
-                            // quickbars_insert_toolbar: 'imagebrowser quicktable',
-                            quickbars_insert_toolbar: false,
-                            {$spellchecker_config}
-                        EOF;
+    theme: "silver",
+    mobile: {
+        theme: 'mobile',
+        toolbar: ['undo', 'bold', 'italic', 'link', 'bullist', 'styleselect'],
+    },
+    browser_spellcheck: true,
+    contextmenu: false,
+    plugins: "tooltoggle,visualblocks,wordcount,link,lists,imagebrowser,table,emoticons{$spellchecker},paste,code,fullscreen,directionality,searchreplace,nonbreaking,charmap{$mathslateplugin},anchor",
+    skin: 'oxide',
+    toolbar1: {$toolbar[1]},
+    toolbar2: {$toolbar[2]},
+    toolbar3: {$toolbar[3]},
+    menubar: false,
+    fix_list_elements: true,
+    image_advtab: true,
+    table_style_by_css: true,
+    {$spellchecker_config}
+EOF;
                     }
-                    $samepage = get_string('samepage', 'mahara');
+                    else {
+                        $tinymceconfig = <<<EOF
+    selector: "textarea.tinywysiwyg",
+    theme: "silver",
+    skin: 'light',
+    plugins: "fullscreen,autoresize",
+    toolbar: {$toolbar[0]},
+EOF;
+                    }
+$samepage = get_string('samepage', 'mahara');
                     $headers[] = <<<EOF
-
-<script language='javascript'>
-
-var extendedElements = "object[width|height|classid|codebase]"
-+ ",param[name|value]"
-+ ",embed[src|type|width|height|flashvars|wmode]"
-+ ",script[src,type,language]"
-+ ",figure[class]"
-+ ",figcaption[class]"
-+ ",ul[id|type|compact]"
-+ ",iframe[src|width|height|name|scrolling|frameborder|allowfullscreen|webkitallowfullscreen|mozallowfullscreen|longdesc|marginheight|marginwidth|align|title|class|type|style]"
-+ ",a[id|class|title|href|name|target]"
-+ ",button[id|class|title]";
-
-var fontFormats = 'Andale Mono=andale mono,times;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Book Antiqua=book antiqua,palatino;Comic Sans MS=comic sans ms,sans-serif;Courier New=courier new,courier;Georgia=georgia,palatino;Helvetica=helvetica;Impact=impact,chicago;Open Sans=Open Sans;Symbol=symbol;Tahoma=tahoma,arial,helvetica,sans-serif;Terminal=terminal,monaco;Times New Roman=times new roman,times;Trebuchet MS=trebuchet ms,geneva;Verdana=verdana,geneva;Webdings=webdings;Wingdings=wingdings,zapf dingbats;';
-
+<script>
 tinyMCE.init({
     {$tinymceconfig}
+    schema: 'html4',
     block_formats: 'Paragraph=p; Heading 1=h4; Heading 2=h5; Heading 3=h6; Preformatted=pre',
-    extended_valid_elements: extendedElements,
-    urlconverter_callback : "custom_urlconvert",
+    extended_valid_elements:
+        "object[width|height|classid|codebase]"
+        + ",param[name|value]"
+        + ",embed[src|type|width|height|flashvars|wmode]"
+        + ",script[src,type,language]"
+        + ",figure[class]"
+        + ",figcaption[class]"
+        + ",ul[id|type|compact]"
+        + ",iframe[src|width|height|name|scrolling|frameborder|allowfullscreen|webkitallowfullscreen|mozallowfullscreen|longdesc|marginheight|marginwidth|align|title|class|type|style]"
+        + ",a[id|class|title|href|name|target]"
+        + ",button[id|class|title]"
+    ,urlconverter_callback : "custom_urlconvert",
     language: '{$language}',
     directionality: "{$tinymce_langdir}",
     content_css : {$content_css},
-    font_formats: fontFormats,
+    font_formats: 'Andale Mono=andale mono,times;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Book Antiqua=book antiqua,palatino;Comic Sans MS=comic sans ms,sans-serif;Courier New=courier new,courier;Georgia=georgia,palatino;Helvetica=helvetica;Impact=impact,chicago;Open Sans=Open Sans;Symbol=symbol;Tahoma=tahoma,arial,helvetica,sans-serif;Terminal=terminal,monaco;Times New Roman=times new roman,times;Trebuchet MS=trebuchet ms,geneva;Verdana=verdana,geneva;Webdings=webdings;Wingdings=wingdings,zapf dingbats;',
     remove_script_host: false,
     relative_urls: false,
     target_list: [
@@ -487,19 +490,19 @@ function custom_urlconvert (u, n, e) {
 </script>
 
 EOF;
-                    unset($resource[$key]);
+                    unset($check[$key]);
                 }
                 else {
-                    if ($resource[$key] != $found_tinymce) {
+                    if ($check[$key] != $found_tinymce) {
                         log_warn('Two differently configured tinyMCE instances have been asked for on this page! This is not possible');
                     }
-                    unset($resource[$key]);
+                    unset($check[$key]);
                 }
             }
 
             // If any page adds jquery explicitly, remove it from the list
-            if (($key = array_search('jquery', $resource)) !== false) {
-                unset($resource[$key]);
+            if (($key = array_search('jquery', $check)) !== false) {
+                unset($check[$key]);
             }
         }
     }
@@ -760,8 +763,8 @@ EOF;
     if (isset($sitetop)) {
         $smarty->assign('SITETOP', $sitetop);
     }
-    if (defined('PUBLIC_ACCESS')) {
-        $smarty->assign('PUBLIC_ACCESS', true);
+    if (defined('PUBLIC')) {
+        $smarty->assign('PUBLIC', true);
     }
     if (defined('ADMIN')) {
         $smarty->assign('ADMIN', true);
@@ -1637,7 +1640,7 @@ function param_exists($name) {
  * @param string The GET or POST parameter you want returned
  * @param mixed [optional] the default value for this parameter
  *
- * @return array<int, string>|string The value of the parameter
+ * @return string The value of the parameter
  *
  */
 function param_variable($name) {
@@ -2692,7 +2695,7 @@ function admin_nav() {
         if ($plugins = plugins_installed($plugintype)) {
             foreach ($plugins as &$plugin) {
                 if (safe_require_plugin($plugintype, $plugin->name)) {
-                    $classname = generate_class_name($plugintype, $plugin->name);
+                    $classname = generate_class_name($plugintype,$plugin->name);
                     $plugin_menu = $classname::admin_menu_items();
                     $menu = array_merge($menu, $plugin_menu);
                 }
@@ -2887,7 +2890,7 @@ function institutional_admin_nav() {
         if ($plugins = plugins_installed($plugintype)) {
             foreach ($plugins as &$plugin) {
                 if (safe_require_plugin($plugintype, $plugin->name)) {
-                    $classname = generate_class_name($plugintype, $plugin->name);
+                    $classname = generate_class_name($plugintype,$plugin->name);
                     $plugin_menu = $classname::institution_menu_items();
                     $ret = array_merge($ret, $plugin_menu);
                 }
@@ -2929,7 +2932,7 @@ function staff_nav() {
         if ($plugins = plugins_installed($plugintype)) {
             foreach ($plugins as &$plugin) {
                 if (safe_require_plugin($plugintype, $plugin->name)) {
-                    $classname = generate_class_name($plugintype, $plugin->name);
+                    $classname = generate_class_name($plugintype,$plugin->name);
                     $plugin_menu = $classname::institution_staff_menu_items();
                     $menu = array_merge($menu, $plugin_menu);
                 }
@@ -2998,7 +3001,7 @@ function mahara_standard_nav() {
             'url' => null,
             'title' => get_string('share'),
             'weight' => 30,
-            'iconclass' => 'share-nodes',
+            'iconclass' => 'unlock',
         ),
         'engage' => array(
             'path' => 'engage',
@@ -3135,7 +3138,7 @@ function main_nav($type = null) {
             if ($plugins = plugins_installed($plugintype)) {
                 foreach ($plugins as &$plugin) {
                     if (safe_require_plugin($plugintype, $plugin->name)) {
-                        $classname = generate_class_name($plugintype, $plugin->name);
+                        $classname = generate_class_name($plugintype,$plugin->name);
                         $plugin_menu = $classname::menu_items();
                         $menu = array_merge($menu, $plugin_menu);
                     }
@@ -3426,7 +3429,8 @@ function find_menu_children(&$menu, $path) {
             && ($item['path'] == MENUITEM
                 || ($item['path'] . '/' == substr(MENUITEM, 0, strlen($item['path'])+1))
                 || (!empty($item['parent']) && $item['parent'] == MENUITEM));
-        if (($path == '' && $item['path'] == '') ||
+        if (
+            ($path == '' && $item['path'] == '') ||
             ($item['path'] != '' && substr($item['path'], 0, strlen($path)) == $path && !preg_match('%/%', substr($item['path'], strlen($path) + 1)))) {
             $result[] = $item;
             unset($menu[$key]);
@@ -3470,7 +3474,8 @@ function selfsearch_sideblock() {
                                                    'create/files',
                                                    'share/sharedbyme',
                                                    'create/views')
-                                   )),
+                                   )
+                         ),
         );
         return $sideblock;
     }
@@ -3651,22 +3656,19 @@ function get_script_path() {
     if (!empty($_SERVER['REQUEST_URI'])) {
         return $_SERVER['REQUEST_URI'];
 
-    }
-    else if (!empty($_SERVER['PHP_SELF'])) {
+    } else if (!empty($_SERVER['PHP_SELF'])) {
         if (!empty($_SERVER['QUERY_STRING'])) {
             return $_SERVER['PHP_SELF'] .'?'. $_SERVER['QUERY_STRING'];
         }
         return $_SERVER['PHP_SELF'];
 
-    }
-    else if (!empty($_SERVER['SCRIPT_NAME'])) {
+    } else if (!empty($_SERVER['SCRIPT_NAME'])) {
         if (!empty($_SERVER['QUERY_STRING'])) {
             return $_SERVER['SCRIPT_NAME'] .'?'. $_SERVER['QUERY_STRING'];
         }
         return $_SERVER['SCRIPT_NAME'];
 
-    }
-    else if (!empty($_SERVER['URL'])) {     // May help IIS (not well tested)
+    } else if (!empty($_SERVER['URL'])) {     // May help IIS (not well tested)
         if (!empty($_SERVER['QUERY_STRING'])) {
             return $_SERVER['URL'] .'?'. $_SERVER['QUERY_STRING'];
         }
@@ -3748,8 +3750,7 @@ function get_full_script_path() {
 
     if (!empty($url['port'])) {
         $hostname .= ':'.$url['port'];
-    }
-    else if (!empty($_SERVER['SERVER_PORT'])) {
+    } else if (!empty($_SERVER['SERVER_PORT'])) {
         // SSL proxy could be on a random port and we don't want it to appear in URL.
         if (get_config('sslproxy')) {
             $_SERVER['SERVER_PORT'] = '443';
@@ -3908,7 +3909,7 @@ function get_htmlpurifier_custom_filters() {
  * @return string The cleaned up text
  */
 function clean_html($text, $xhtml=false) {
-    require_once(get_config('docroot') . 'vendor/ezyang/htmlpurifier/library/HTMLPurifier.auto.php');
+    require_once('htmlpurifier/HTMLPurifier.auto.php');
     $config = HTMLPurifier_Config::createDefault();
 
     // Uncomment this line to disable the cache during debugging
@@ -4071,8 +4072,8 @@ function clean_html($text, $xhtml=false) {
  * @return string The cleaned CSS
  */
 function clean_css($input_css, $preserve_css=false) {
-    require_once(get_config('docroot') . 'vendor/ezyang/htmlpurifier/library/HTMLPurifier.auto.php');
-    require_once(get_config('docroot') . 'vendor/cerdic/css-tidy/class.csstidy.php');
+    require_once('htmlpurifier/HTMLPurifier.auto.php');
+    require_once('csstidy/class.csstidy.php');
 
     // Create a new configuration object
     $config = HTMLPurifier_Config::createDefault();
@@ -4267,29 +4268,6 @@ function str_shorten_text($str, $maxlen=100, $truncate=false) {
         return substr($str, 0, floor($maxlen / 2) - 1) . '...' . substr($str, -(floor($maxlen / 2) - 2));
     }
     return $str;
-}
-
-/**
- * Takes the title and the $view and returns the title any extras.
- *
- * Initial usege is to check to see if we need to add the submission date to
- * the title.
- *
- * @param int $viewid The view id of the View we are updating.
- * @return string The updated title if needed elsewhere.
- */
-function set_view_title_as_submitted($viewid) {
-    $view = new View($viewid);
-    $time = $view->get('submittedtime');
-    if (!empty($time)) {
-        $date = format_date(strtotime($time), 'strftimerecentyear');
-        $title = $view->get('title') . get_string('submittedtimetitle', 'view', $date);
-        $view->set('title', $title);
-        $view->set('dirty', true);
-        $view->commit();
-        return $title;
-    }
-    return $view->get('title');
 }
 
 /**
@@ -4712,8 +4690,7 @@ function build_pagination_pagelink($class, $text, $title, $disabled=false, $url=
         $result .= '<span class="page-link">';
         $result .= $text;
         $result .= '</span>';
-    }
-    else {
+    } else {
         $result .= '<a class="page-link" href="' . hsc($url) . '" title="' . $title . '">';
         $result .= $text;
         $result .= '</a>';
@@ -4917,8 +4894,11 @@ function sanitize_url($url) {
         }
     }
     // Make sure the URL starts with a valid protocol (or "//", indicating that it's protocol-relative)
-    if (!(in_array($parsedurl['scheme'], array('https', 'http', 'ftp', 'mailto'))
-                    || preg_match('#^//[a-zA-Z0-9]#', $url) === 1)
+    if (
+            !(
+                    in_array($parsedurl['scheme'], array('https', 'http', 'ftp', 'mailto'))
+                    || preg_match('#^//[a-zA-Z0-9]#', $url) === 1
+            )
     ) {
         return '';
     }
@@ -5197,7 +5177,9 @@ function is_valid_url($url) {
 function account_institution_get_menu_tabs($migrate=true) {
     $menu = array(
         'institutions' => array(
-            'path' => 'settings/institutions', 'url' => 'account/institutions.php', 'title' => get_string('currentinstitutionmembership'),
+            'path' => 'settings/institutions',
+            'url' => 'account/institutions.php',
+            'title' => get_string('currentinstitutionmembership'),
             'weight' => 10,
         )
     );

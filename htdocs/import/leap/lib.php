@@ -35,13 +35,6 @@ class PluginImportLeap extends PluginImport {
     private $namespaces = array();
 
     /**
-     * The mahara namespace
-     *
-     * @var string
-     */
-    public $namespace_mahara;
-
-    /**
      * List of strategies for each artefact plugin
      *
      * An artefact plugin could provide several different possible "strategies"
@@ -199,11 +192,10 @@ class PluginImportLeap extends PluginImport {
     const NS_CATEGORIES_200903 = 'https://web.archive.org/web/20111027183853/http://wiki.cetis.ac.uk/2009-03/Leap2A_categories';
     const NS_LEAP              = 'https://web.archive.org/web/20100503000634/http://terms.leapspecs.org';
     const NS_CATEGORIES        = 'https://web.archive.org/web/20120819100914/http://wiki.leapspecs.org:80/2A/categories';
-    // We try to identify which of the NS_MAHARA constants to use within read_leap2a_xml_file() based
-    // on the xmlns:mahara value. The NS_MAHARA_2022 is the option that became obsolete in 2022 and
-    // the NS_MAHARA is current option used in exports.
-    const NS_MAHARA      = 'https://wiki.mahara.org/wiki/Developer_Area/Import//Export/LEAP_Extensions';
-    const NS_MAHARA_2022 = 'http://wiki.mahara.org/Developer_Area/Import%2F%2FExport/LEAP_Extensions#';
+    // NOTE: Even though this URL is no longer valid, it must not change because it is used as an identifier
+    // in existing XML files.
+    // (Correct current URL is https://wiki.mahara.org/wiki/Developer_Area/Import//Export/LEAP_Extensions# )
+    const NS_MAHARA     = 'https://wiki.mahara.org/wiki/Developer_Area/Import//Export/LEAP_Extensions';
 
     const XHTML_DIV       = '<div xmlns="http://www.w3.org/1999/xhtml">';
     const XHTML_DIV_EMPTY = '<div xmlns="http://www.w3.org/1999/xhtml"/>';
@@ -335,24 +327,8 @@ class PluginImportLeap extends PluginImport {
         }
         $this->xml = $sxe;
         libxml_after();
+
         $this->namespaces = array_flip($this->xml->getDocNamespaces());
-        if (in_array('leap2', $this->namespaces)) {
-            // Make sure the old and new leap2 namespaces are available
-            if (!isset($this->namespaces['https://web.archive.org/web/20100503000634/http://terms.leapspecs.org'])) {
-                $this->namespaces['https://web.archive.org/web/20100503000634/http://terms.leapspecs.org'] = 'leap2';
-            }
-            if (!isset($this->namespaces['http://terms.leapspecs.org/'])) {
-                $this->namespaces['http://terms.leapspecs.org/'] = 'leap2';
-            }
-            // Make sure the old and new leap2 categories namespaces are available
-            if (!isset($this->namespaces['https://web.archive.org/web/20120819100914/http://wiki.leapspecs.org:80/2A/categories'])) {
-                $this->namespaces['https://web.archive.org/web/20120819100914/http://wiki.leapspecs.org:80/2A/categories'] = 'categories';
-            }
-            if (!isset($this->namespaces['http://wiki.leapspecs.org/2A/categories/'])) {
-                $this->namespaces['http://wiki.leapspecs.org/2A/categories/'] = 'categories';
-            }
-        }
-        $this->namespace_mahara = isset($this->namespaces[PluginImportLeap::NS_MAHARA_2022]) ? PluginImportLeap::NS_MAHARA_2022 : PluginImportLeap::NS_MAHARA;
         $this->registerXpathNamespaces($this->xml);
         $this->trace("Document loaded, entries: " . count($this->xml->entry));
         $this->snapshot('loaded XML');
@@ -427,7 +403,8 @@ class PluginImportLeap extends PluginImport {
             }
             $entry = $this->get_entry_by_id($entryid);
             $classname = 'LeapImport' . ucfirst($strategydata['artefactplugin']);
-            $classname::add_import_entry_request_using_strategy($entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
+            call_static_method($classname, 'add_import_entry_request_using_strategy',
+                            $entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
 
             $usedlist[] = $entryid;
             if (isset($strategydata['other_required_entries'])) {
@@ -442,7 +419,7 @@ class PluginImportLeap extends PluginImport {
             foreach (plugins_installed('artefact') as $plugin) {
                 $classname = 'LeapImport' . ucfirst($plugin->name);
                 if (method_exists($classname, 'add_import_entry_request_author_data')) {
-                    $classname::add_import_entry_request_author_data($this, $this->persondataid);
+                    call_static_method($classname, 'add_import_entry_request_author_data', $this, $this->persondataid);
                 }
             }
         }
@@ -496,7 +473,7 @@ class PluginImportLeap extends PluginImport {
                 $classname = 'LeapImport' . ucfirst($plugin);
                 if (method_exists($classname, 'render_import_entry_requests')) {
                     safe_require('artefact', $plugin);
-                    $html .= $classname::render_import_entry_requests($this);
+                    $html .= call_static_method($classname, 'render_import_entry_requests', $this);
                 }
             }
         }
@@ -526,7 +503,7 @@ class PluginImportLeap extends PluginImport {
                 $classname = 'LeapImport' . ucfirst($plugin);
                 if (method_exists($classname, $method)) {
                     safe_require('artefact', $plugin);
-                    $classname::{$method}($this);
+                    call_static_method($classname, $method, $this);
                 }
             }
         }
@@ -678,7 +655,7 @@ class PluginImportLeap extends PluginImport {
                 $classname = 'LeapImport' . ucfirst($plugin);
                 if (method_exists($classname, 'setup')) {
                     safe_require('artefact', $plugin);
-                    $classname::setup($this);
+                    call_static_method($classname, 'setup', $this);
                 }
             }
         }
@@ -723,7 +700,7 @@ class PluginImportLeap extends PluginImport {
                         throw new SystemException("Class $classname does not extend LeapImportArtefactPlugin as it should");
                     }
                     if (method_exists($classname, 'get_import_strategies_for_entry')) {
-                        $strategies = $classname::get_import_strategies_for_entry($entry, $this);
+                        $strategies = call_static_method($classname, 'get_import_strategies_for_entry', $entry, $this);
                         $this->trace("   artefact.$plugin strategies: " . count($strategies));
                         if ($strategies) {
                             $this->trace($strategies, self::LOG_LEVEL_VERBOSE);
@@ -885,7 +862,8 @@ class PluginImportLeap extends PluginImport {
             // TODO: this throws ImportException if it can't be imported, need
             // to decide if this exception can bubble up or whether it should
             // be caught here
-            $artefactmapping = $classname::import_using_strategy($entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
+            $artefactmapping = call_static_method($classname, 'import_using_strategy',
+                $entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
 
             if (!is_array($artefactmapping)) {
                 throw new SystemException("import_from_load_mapping(): $classname::import_using_strategy has not return a list");
@@ -911,7 +889,7 @@ class PluginImportLeap extends PluginImport {
             foreach (plugins_installed('artefact') as $plugin) {
                 $classname = 'LeapImport' . ucfirst($plugin->name);
                 if (method_exists($classname, 'import_author_data')) {
-                    $classname::import_author_data($this, $this->persondataid);
+                    call_static_method($classname, 'import_author_data', $this, $this->persondataid);
                 }
             }
         }
@@ -922,7 +900,8 @@ class PluginImportLeap extends PluginImport {
             $strategydata = $this->loadmapping[$entryid];
             $classname = 'LeapImport' . ucfirst($strategydata['artefactplugin']);
             $entry = $this->get_entry_by_id($entryid);
-            $maybeartefacts = $classname::setup_relationships($entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
+            $maybeartefacts = call_static_method($classname, 'setup_relationships',
+                $entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
             if (is_array($maybeartefacts)) { // some might add new artefacts (eg files attached by relpath, rather than leap id)
                 $this->artefactids = array_merge_recursive($this->artefactids, $maybeartefacts);
             }
@@ -994,7 +973,8 @@ class PluginImportLeap extends PluginImport {
                 $strategydata = $this->loadmapping[$entryid];
                 $classname = 'LeapImport' . ucfirst($strategydata['artefactplugin']);
                 $entry = $this->get_entry_by_id($entryid);
-                $classname::setup_view_relationships($entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
+                call_static_method($classname, 'setup_view_relationships',
+                    $entry, $this, $strategydata['strategy'], $strategydata['other_required_entries']);
             }
         }
 
@@ -1033,7 +1013,7 @@ class PluginImportLeap extends PluginImport {
         foreach (plugins_installed('artefact') as $plugin) {
             $classname = 'LeapImport' . ucfirst($plugin->name);
             if (method_exists($classname, 'cleanup')) {
-                $classname::cleanup($this);
+                call_static_method($classname, 'cleanup', $this);
             }
         }
         $this->trace("------------------\nimport_completed()");
@@ -1454,7 +1434,7 @@ class PluginImportLeap extends PluginImport {
         $columnwidths = [];
         $viewelement = $entry->xpath('mahara:view[1]');
 
-        $maharaattributes = PluginImportLeap::get_attributes($viewelement[0], $this->namespace_mahara);
+        $maharaattributes = PluginImportLeap::get_attributes($viewelement[0], PluginImportLeap::NS_MAHARA);
 
         $gridlayout = isset($maharaattributes['newlayout']) && $maharaattributes['newlayout'];
 
@@ -1596,7 +1576,7 @@ class PluginImportLeap extends PluginImport {
                   $config['grid'][$rowindex][$colindex]['blocks'] = array();
                   $config['grid'][$rowindex][$colindex]['width'] = $columnwidths[$rowindex-1][$colindex-1];
                   foreach ($blockinstances as $blockinstance) {
-                      $attrs = self::get_attributes($blockinstance, $this->namespace_mahara);
+                      $attrs = self::get_attributes($blockinstance, PluginImportLeap::NS_MAHARA);
                       if (!isset($attrs['blocktype'])) {
                           $this->trace("  No mahara:blocktype attribute set for blockinstance at row $rowindex col $colindex, order $order: skipping");
                           continue;
@@ -1649,7 +1629,7 @@ class PluginImportLeap extends PluginImport {
         }
         else {
             foreach ($gridblocks as $blockinstance) {
-                $attrs = self::get_attributes($blockinstance, $this->namespace_mahara);
+                $attrs = self::get_attributes($blockinstance, PluginImportLeap::NS_MAHARA);
                 $row = $attrs['positiony'];
                 $col = $attrs['positionx'];
                 if (!isset($attrs['blocktype'])) {
@@ -1855,7 +1835,7 @@ class PluginImportLeap extends PluginImport {
          safe_require('blocktype', $blockinstance['type']);
          $classname = generate_class_name('blocktype', $blockinstance['type']);
          $method = 'import_rewrite_blockinstance_extra_config_leap';
-         $blockinstance['config'] = $classname::{$method}($this->artefactids, $blockinstance['config']);
+         $blockinstance['config'] = call_static_method($classname, $method, $this->artefactids, $blockinstance['config']);
      }
 
 
@@ -1898,7 +1878,7 @@ class PluginImportLeap extends PluginImport {
                     safe_require('blocktype', $blockrec->blocktype);
                     $classname = generate_class_name('blocktype', $blockrec->blocktype);
                     $method = 'import_rewrite_blockinstance_relationships_leap';
-                    $blockinstance['config'] = $classname::{$method}($blockrec->id, $this);
+                    $blockinstance['config'] = call_static_method($classname, $method, $blockrec->id, $this);
                 }
             }
         }
@@ -2059,7 +2039,7 @@ class PluginImportLeap extends PluginImport {
     public function registerXpathNamespaces(SimpleXMLElement $element) {
         $element->registerXpathNamespace('a', PluginImportLeap::NS_ATOM);
         $element->registerXpathNamespace('rdf', PluginImportLeap::NS_RDF);
-        $element->registerXpathNamespace('mahara', $this->namespace_mahara);
+        $element->registerXpathNamespace('mahara', PluginImportLeap::NS_MAHARA);
     }
 
     /**

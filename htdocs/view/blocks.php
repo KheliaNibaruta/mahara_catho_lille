@@ -52,9 +52,6 @@ if ($view->is_submitted()) {
     $submittedto = $view->submitted_to();
     throw new AccessDeniedException(get_string('canteditsubmitted', 'view', $submittedto['name']));
 }
-if ($view->is_submission()) {
-    throw new AccessDeniedException(get_string('canteditsubmission', 'view'));
-}
 $collectionid = false;
 if ($collection = $view->get('collection')) {
     $collectionid = $collection->get('id');
@@ -224,7 +221,7 @@ $blocks = $view->get_blocks(true);
 $blocksencode = json_encode($blocks);
 
 if ( $view->get('accessibleview')) {
-    $mincolumns = BlockInstance::GRIDSTACK_CONSTANTS['desktopWidth'];
+    $mincolumns = '12';
     $reorder = '  accessibilityReorder();';
 }
 else {
@@ -311,11 +308,6 @@ if ($placeholderblock) {
     $smarty->assign('blocktypes', $placeholderblock);
     $smarty->assign('javascript', false);
     $smarty->assign('accessible', $view->get('accessibleview'));
-    $smarty->assign('GS_DESKTOP_WIDTH', BlockInstance::GRIDSTACK_CONSTANTS['desktopWidth']);
-    $smarty->assign('GS_DEFAULT_HEIGHT', BlockInstance::GRIDSTACK_CONSTANTS['defaultHeight']);
-    $smarty->assign('GS_DRAG_HEIGHT', BlockInstance::GRIDSTACK_CONSTANTS['dragHeight']);
-    $smarty->assign('GS_DRAG_WIDTH', BlockInstance::GRIDSTACK_CONSTANTS['dragWidth']);
-
     $placeholderbutton = $smarty->fetch('view/blocktypelist.tpl');
 }
 $strings = array(
@@ -343,8 +335,6 @@ if ($wwwroot == '/') {
 $javascript[] = $wwwroot . 'js/momentjs/moment-with-locales.min.js';
 $javascript[] = $wwwroot . 'js/bootstrap-datetimepicker/tempusdominus-bootstrap-4.js';
 $stylesheets[] = '<link rel="stylesheet" type="text/css" href="' . append_version_number(get_config('wwwroot') . 'js/jquery/jquery-ui/css/smoothness/jquery-ui.min.css') . '">';
-
-$signoff_html = $view->has_signoff() ? $view->get_signoff_verify_form() : '';
 
 $smarty = smarty($javascript, $stylesheets, $strings, $extraconfig);
 
@@ -397,25 +387,6 @@ $smarty->assign('accesssuspended', View::access_override_pending(array('id' => $
 $smarty->assign('viewtype', $viewtype);
 $smarty->assign('view', $view->get('id'));
 $smarty->assign('groupid', $group);
-$smarty->assign('is_activity_page', $view->get('type') == 'activity');
-
-// Page settings include activity config
-if ($view->get('type') == 'activity' && $view->get('group')) {
-    $activity_data = $view->get_view_activity_data();
-    $group = $view->get('group');
-    $smarty->assign('activity', $activity_data);
-    $can_edit_activity = View::check_can_edit_activity_page_info($group, true);
-    $smarty->assign(
-        'activity_support',
-        $view->get_activity_support_display_edit_form($can_edit_activity && !$activity_data->achieved)
-    );
-    $smarty->assign('can_edit_page_settings', $can_edit_activity);
-    $smarty->assign('activity_signoff_html', $signoff_html);
-}
-else {
-    $smarty->assign('can_edit_page_settings', true);
-}
-
 if (isset($groupurl)) {
     $smarty->assign('groupurl', $groupurl);
 }

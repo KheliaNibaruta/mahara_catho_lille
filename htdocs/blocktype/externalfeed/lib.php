@@ -47,7 +47,7 @@ class PluginBlocktypeExternalfeed extends MaharaCoreBlocktype {
     }
 
     public static function get_viewtypes() {
-        return array('dashboard', 'portfolio', 'profile', 'grouphomepage', 'activity');
+        return array('dashboard', 'portfolio', 'profile', 'grouphomepage');
     }
 
     public static function postinst($prevversion) {
@@ -206,7 +206,8 @@ class PluginBlocktypeExternalfeed extends MaharaCoreBlocktype {
                 'description' => get_string('itemstoshowdescription', 'blocktype.externalfeed'),
                 'defaultvalue' => isset($configdata['count']) ? $configdata['count'] : 10,
                 'size' => 3,
-                'rules' => array('integer' => true, 'minvalue' => 1, 'maxvalue' => 20),
+                'minvalue' => 1,
+                'maxvalue' => 20,
             ),
             'full' => array(
                 'type'         => 'switchbox',

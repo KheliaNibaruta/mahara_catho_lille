@@ -172,7 +172,6 @@ class mahara_url {
      */
     public function remove_params($params = null) {
         if (!is_array($params)) {
-            // phpcs:ignore
             $params = func_get_args();
         }
         foreach ($params as $param) {

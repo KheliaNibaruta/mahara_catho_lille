@@ -36,19 +36,16 @@ else {
 }
 
 if ($USER->get('admin') && param_exists('releaseids')) {
-    $releaseids = param_variable('releaseids');
-    $releaseaction = param_variable('action');
-    $returntouser = false;
+    $releaseids = array_map('intval', (array) param_variable('releaseids'));
     // Release the locked items.
-    foreach ($releaseids as $releaseid => $releasetype) {
-        $view = $collection = false;
-        if ($releasetype === 'collection') {
-            $collection = new Collection($releaseid);
-            $releasecollection = true;
+    foreach ($releaseids as $releaseid) {
+        $view = new View($releaseid);
+        $collection = $view->get_collection();
+        if ($collection === false) {
+            $releasecollection = false;
         }
         else {
-            $view = new View($releaseid);
-            $releasecollection = false;
+            $releasecollection = true;
         }
 
         if (is_plugin_active('submissions', 'module')) {
@@ -63,9 +60,6 @@ if ($USER->get('admin') && param_exists('releaseids')) {
             }
         }
 
-        if ($releaseaction == 'releaseandreturnsubmissions') {
-            $returntouser = true;
-        }
         // If we're a collection, release that.
         if ($collection) {
             try {
@@ -76,7 +70,7 @@ if ($USER->get('admin') && param_exists('releaseids')) {
                         'messagekey' => 'currentarchivereleasedsubmittedhostmessage',
                     ],
                 ];
-                $collection->release($USER, $releasemessageoverrides, $returntouser);
+                $collection->release($USER, $releasemessageoverrides);
                 $msg = get_string('portfolioreleasedsuccesswithname', 'group', $collection->get('name'));
             }
             catch (SystemException $e) {
@@ -93,7 +87,7 @@ if ($USER->get('admin') && param_exists('releaseids')) {
                         'messagekey' => 'currentarchivereleasedsubmittedhostmessage',
                     ],
                 ];
-                $view->release($USER, $releasemessageoverrides, $returntouser);
+                $view->release($USER, $releasemessageoverrides);
                 $msg = get_string('portfolioreleasedsuccesswithname', 'group', $view->get('title'));
             }
             catch (SystemException $e) {
@@ -157,7 +151,7 @@ $jsscripts = [
 ];
 
 $smarty = smarty($jsscripts, array(), array('ascending' => 'mahara', 'descending' => 'mahara'));
-setpageicon($smarty, 'icon-check-to-slot');
+setpageicon($smarty, 'icon-archive');
 $smarty->assign('tabs', $tabs);
 $smarty->assign('search', $search);
 $smarty->assign('searchtypecurrent', $searchtypecurrent);

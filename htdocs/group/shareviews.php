@@ -21,16 +21,13 @@ define('MENUITEM_SUBPAGE', 'share');
 
 define('GROUP', param_integer('group'));
 $group = group_current_group();
-
-if (group_deny_access($group, 'member')) {
-  throw new AccessDeniedException();
+if (!group_user_can_edit_views($group)) {
+    throw new AccessDeniedException();
 }
-
 
 $accesslists = View::get_accesslists(null, $group->id);
 
 $smarty = smarty();
-setpageicon($smarty, 'icon-share-nodes');
 $smarty->assign('heading', $group->name);
 $smarty->assign('headingclass', 'page-header');
 $smarty->assign('accesslists', $accesslists);

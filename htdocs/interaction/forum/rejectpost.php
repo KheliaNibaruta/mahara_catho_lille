@@ -55,8 +55,7 @@ if ($postattachments = get_records_sql_array("
         WHERE pa.post = ?", array($postid))) {
     safe_require('artefact', 'file');
     foreach ($postattachments as $file) {
-        $classname = generate_artefact_class_name($file->artefacttype);
-        $file->icon = $classname::get_icon(array('id' => $file->id, 'post' => $postid));
+        $file->icon = call_static_method(generate_artefact_class_name($file->artefacttype), 'get_icon', array('id' => $file->id, 'post' => $postid));
     }
 }
 $post->attachments = $postattachments;
@@ -157,7 +156,6 @@ $poster->find_by_id($post->poster);
 
 $smarty = smarty();
 $smarty->assign('deleteduser', $poster->get('deleted'));
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('subheading', TITLE);
 $smarty->assign('post', $post);
 $smarty->assign('poster', $poster);

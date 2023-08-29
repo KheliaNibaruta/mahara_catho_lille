@@ -29,7 +29,7 @@ class PluginBlocktypeTaggedposts extends MaharaCoreBlocktype {
     }
 
     public static function get_viewtypes() {
-        return array('dashboard', 'portfolio', 'profile', 'grouphomepage', 'activity');
+        return array('dashboard', 'portfolio', 'profile', 'grouphomepage');
     }
 
     public static function get_instance_javascript(BlockInstance $bi) {
@@ -450,7 +450,7 @@ EOF;
                 'description'   => get_string('betweenxandy', 'mahara', 1, 100),
                 'defaultvalue'  => isset($configdata['count']) ? $configdata['count'] : 10,
                 'size'          => 3,
-                'rules'         => array('integer' => true, 'minvalue' => 1, 'maxvalue' => 100),
+                'rules'         => array('integer' => true, 'minvalue' => 1, 'maxvalue' => 999),
             );
             $elements['full']  = array(
                 'type'         => 'switchbox',

@@ -404,7 +404,7 @@ abstract class ActivityType {
               }
           }
           try {
-              $notificationclass::notify_user($user, $userdata);
+              call_static_method($notificationclass, 'notify_user', $user, $userdata);
           }
           catch (MaharaException $e) {
               static $badnotification = false;

@@ -107,7 +107,7 @@ function swapBlocks(topBlock, bottomBlock, topBlockNewY) {
     dimensions = {
         newx: "0",
         newy: bottomBlock.getAttribute('gs-y'),
-        newwidth: GRIDSTACK_CONSTANTS.desktopWidth,
+        newwidth: "12",
         newheight: bottomBlock.getAttribute('gs-h'),
     }
     moveBlock(id, dimensions, grid);

@@ -3533,12 +3533,6 @@ function pageactivity_statistics_headers($extra, $urllink) {
               'link' => format_goto($urllink . '&sort=comments', $extra, array('sort'), 'comments'),
               'helplink' => get_help_icon('core', 'reports', 'pageactivity', 'comments')
         ),
-        array('id' => 'submittedstatus', 'required' => false,
-              'name' => get_string('submittedstatus', 'view'),
-              'class' => format_class($extra, 'submittedstatus'),
-              'link' => format_goto($urllink . '&sort=submittedstatus', $extra, array('sort'), 'submittedstatus'),
-              'helplink' => get_help_icon('core', 'reports', 'pageactivity', 'submittedstatus')
-        ),
     );
 }
 
@@ -3647,15 +3641,12 @@ function view_stats_table($limit, $offset, $extra) {
         case "visited":
             $orderby = " v.atime " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", v.title, v.id";
             break;
-        case "submittedstatus":
-            $orderby = " v.submittedstatus " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", v.title, v.id";
-            break;
         case "visits":
         default:
             $orderby = " v.visits " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", v.title, v.id";
     }
 
-    $sql = "SELECT v.id, v.title, v.owner, v.group, v.institution, c.name, v.submittedstatus, v.submissionoriginal,
+    $sql = "SELECT v.id, v.title, v.owner, v.group, v.institution, c.name,
             CASE
                 WHEN v.owner IS NOT NULL
                 THEN (SELECT CONCAT(firstname, ' ', lastname) FROM {usr} WHERE id = v.owner)
@@ -3701,14 +3692,13 @@ function view_stats_table($limit, $offset, $extra) {
             $v->collectiontitle = $v->collection->get('name');
         }
         $v->canbeviewed = $v->id ? can_view_view($v->id) : false;
-        $v->submittedstatus = add_submitted_label($v->submittedstatus, (bool)$v->submissionoriginal);
     }
 
     $daterange = array_map(function ($obj) { return $obj->ctime; }, $viewdata);
     $result['settings']['start'] = ($start) ? $start : min($daterange);
     if (!empty($extra['csvdownload'])) {
         $csvfields = array('displaytitle', 'fullurl', 'collectiontitle','ownername', 'ownerurl',
-                           'ctime', 'mtime', 'atime', 'blocks', 'visits', 'comments', 'submittedstatus');
+                           'ctime', 'mtime', 'atime', 'blocks', 'visits', 'comments');
         $USER->set_download_file(generate_csv($viewdata, $csvfields), 'viewstatistics.csv', 'text/csv', true);
     }
     $result['csv'] = true;
@@ -3724,33 +3714,6 @@ function view_stats_table($limit, $offset, $extra) {
     $result['tablerows'] = $smarty->fetch('admin/viewstats.tpl');
 
     return $result;
-}
-
-/**
- * Find the correct submission label based on the submittedstatus value and
- * if the connection to original still exists
- *
- * @param integer $submittedstatus
- * @param boolean $original
- * @return string|false
- */
-function add_submitted_label($submittedstatus, $original=false) {
-    if (is_null($submittedstatus)) {
-        return false;
-    }
-    if ($original && $submittedstatus == 0) {
-        $submittedstatus = 3;
-    }
-    $options = array(0 => get_string('notsubmitted', 'view'),
-                     1 => get_string('Submitted', 'view'),
-                     2 => get_string('archiving', 'view'),
-                     3 => get_string('released', 'view')
-               );
-
-    if (isset($options[$submittedstatus])) {
-        return $options[$submittedstatus];
-    }
-    return $options[0];
 }
 
 function view_type_graph($type = null) {
@@ -3941,15 +3904,12 @@ function institution_view_stats_table($limit, $offset, &$institutiondata, $extra
         case "visited":
             $orderby = " v.atime " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", v.title, v.id";
             break;
-        case "submittedstatus":
-            $orderby = " v.submittedstatus " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", v.title, v.id";
-            break;
         case "visits":
         default:
             $orderby = " v.visits " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", v.title, v.id";
     }
 
-    $sql = "SELECT v.id, v.title, v.owner, v.group, v.institution, v.submittedstatus, v.submissionoriginal,
+    $sql = "SELECT v.id, v.title, v.owner, v.group, v.institution,
             CASE
                 WHEN v.owner IS NOT NULL
                 THEN (SELECT CONCAT(firstname, ' ', lastname) FROM {usr} WHERE id = v.owner)
@@ -3996,14 +3956,13 @@ function institution_view_stats_table($limit, $offset, &$institutiondata, $extra
         $v->name = ($v->collection) ? $v->collection->get('name') : null;
         $v->collectiontitle = $v->name;
         $v->canbeviewed = $v->id ? can_view_view($v->id) : false;
-        $v->submittedstatus = add_submitted_label($v->submittedstatus, (bool)$v->submissionoriginal);
     }
 
     $daterange = array_map(function ($obj) { return $obj->ctime; }, $viewdata);
     $result['settings']['start'] = ($start) ? $start : min($daterange);
     if (!empty($extra['csvdownload'])) {
         $csvfields = array('displaytitle', 'fullurl', 'collectiontitle', 'ownername', 'ownerurl',
-                           'ctime', 'mtime', 'atime', 'blocks', 'visits', 'comments', 'submittedstatus');
+                           'ctime', 'mtime', 'atime', 'blocks', 'visits', 'comments');
         $USER->set_download_file(generate_csv($viewdata, $csvfields), $institutiondata['name'] . 'viewstatistics.csv', 'text/csv', true);
     }
     $result['csv'] = true;
@@ -4856,12 +4815,6 @@ function smartevidence_stats_headers($limit, $offset, $extra, $institution, $url
             'link' => format_goto($urllink . '&sort=pagecount', $extra, array('sort'), 'pagecount'),
             'helplink' => get_help_icon('core', 'reports', 'smartevidence', 'pagecount'),
         ),
-        array('id' => 'submittedstatus',
-              'name' => get_string('submittedstatus', 'view'),
-              'class' => format_class($extra, 'submittedstatus'),
-              'link' => format_goto($urllink . '&sort=submittedstatus', $extra, array('sort'), 'submittedstatus'),
-              'helplink' => get_help_icon('core', 'reports', 'pageactivity', 'submittedstatus')
-        ),
         array(
             'id' => 'accessrules',
             'required' => false,
@@ -4979,7 +4932,6 @@ function smartevidence_stats_table($limit, $offset, $extra, $institution, $urlli
         $item->hasaccessrules = !empty($item->access);
         $item->canbeviewed = $item->viewid ? can_view_view($item->viewid) : false;
         $item->pending = is_view_suspended($item->viewid);
-        $item->submittedstatus = add_submitted_label($item->submittedstatus, (bool)$item->submissionoriginal);
         // Extra detail from the collection.
         $collection = new Collection($item->collectionid);
         $item->collectionurl = $collection->get_url();
@@ -5036,7 +4988,6 @@ function smartevidence_stats_table($limit, $offset, $extra, $institution, $urlli
             'hasaccessrules',
             'userurl',
             'collectionurl',
-            'submittedstatus'
         ];
         foreach ($framework_statuses as $key => $state) {
             $csvfields[] = $state['statisticsid'];
@@ -5092,9 +5043,7 @@ function smartevidence_stats_query($limit, $offset, $extra, $institution) {
             c.id AS collectionid,
             (SELECT COUNT(*) FROM {collection_view} WHERE collection = c.id) AS views,
             c.name AS title,
-            c.ctime AS vctime,
-            c.submittedstatus,
-            c.submissionoriginal
+            c.ctime AS vctime
         FROM {usr} u JOIN {collection} c ON c.owner = u.id
         JOIN {collection_view} cv ON cv.collection = c.id
         WHERE cv.displayorder = 0
@@ -5139,9 +5088,6 @@ function smartevidence_stats_query($limit, $offset, $extra, $institution) {
         case "collection":
             $orderby = " title " . (!empty($extra['sortdesc']) ? 'DESC' : 'ASC') . ", displayname";
             break;
-        case "submittedstatus":
-            $orderby = " c.submittedstatus " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", title, viewid";
-            break;
         case 'displayname':
         case 'username':
             // Order by sort type.
@@ -5162,8 +5108,6 @@ function smartevidence_stats_query($limit, $offset, $extra, $institution) {
         collectionid,
         views,
         title,
-        submittedstatus,
-        submissionoriginal,
         vctime
         " . $fromsql . $wheresql . "
         ORDER BY " . $orderby;
@@ -5198,12 +5142,6 @@ function accesslist_statistics_headers($extra, $urllink) {
               'class' => format_class($extra, 'numviews'),
               'link' => format_goto($urllink . '&sort=numviews', $extra, array('sort'), 'numviews'),
               'helplink' => get_help_icon('core', 'reports', 'accesslist', 'numviews')
-        ),
-        array('id' => 'submittedstatus', 'required' => false,
-              'name' => get_string('submittedstatus', 'view'),
-              'class' => format_class($extra, 'submittedstatus'),
-              'link' => format_goto($urllink . '&sort=submittedstatus', $extra, array('sort'), 'submittedstatus'),
-              'helplink' => get_help_icon('core', 'reports', 'pageactivity', 'submittedstatus')
         ),
         array(
               'id' => 'accessrules', 'required' => true,
@@ -5243,7 +5181,6 @@ function accesslist_stats_table($limit, $offset, $extra, $institution, $urllink)
 
     $fromsql = " FROM (
         SELECT u.id AS userid, u.deleted AS udeleted, CONCAT(u.firstname, ' ', u.lastname) AS displayname, cv.view AS viewid, c.id AS collectionid,
-            c.submittedstatus AS submittedstatus, c.submissionoriginal AS submissionoriginal,
             (SELECT COUNT(*) FROM {collection_view} WHERE collection = c.id) AS views,
             c.name AS title, c.ctime AS vctime
         FROM {usr} u JOIN {collection} c ON c.owner = u.id
@@ -5251,15 +5188,12 @@ function accesslist_stats_table($limit, $offset, $extra, $institution, $urllink)
         WHERE cv.displayorder = 0
         UNION
         SELECT u.id AS userid, u.deleted AS udeleted, CONCAT(u.firstname, ' ', u.lastname) AS displayname, v.id AS viewid, NULL AS collectionid,
-            CASE WHEN v.type != 'profile' THEN v.submittedstatus ELSE NULL END AS submittedstatus,
-            CASE WHEN v.type != 'profile' THEN v.submissionoriginal ELSE NULL END AS submissionoriginal,
             1 AS views, v.title, v.ctime AS vctime
         FROM {usr} u JOIN {view} v ON v.owner = u.id
         LEFT JOIN {collection_view} cv ON cv.view = v.id
         WHERE cv.collection IS NULL AND v.type !='dashboard'
         UNION
         SELECT u.id AS userid, u.deleted AS udeleted, CONCAT(u.firstname, ' ', u.lastname) AS displayname, NULL AS viewid, NULL AS collectionid,
-             NULL AS submittedstatus, NULL AS submissionoriginal,
             0 AS views, NULL as title, u.ctime AS vctime
         FROM {usr} u LEFT JOIN {view} v ON v.owner = u.id
         WHERE v.id IS NULL
@@ -5313,14 +5247,11 @@ function accesslist_stats_table($limit, $offset, $extra, $institution, $urllink)
         case "views":
             $orderby = " title " . (!empty($extra['sortdesc']) ? 'DESC' : 'ASC') . ", displayname";
             break;
-        case "submittedstatus":
-            $orderby = " submittedstatus " . (!empty($extra['sortdesc']) ? 'ASC' : 'DESC') . ", title, viewid";
-            break;
         case "owner":
         default:
             $orderby = " displayname " . (!empty($extra['sortdesc']) ? 'DESC' : 'ASC') . ", title, viewid";
     }
-    $sql = "SELECT userid, displayname, viewid, collectionid, submittedstatus, submissionoriginal, views, title, vctime
+    $sql = "SELECT userid, displayname, viewid, collectionid, views, title, vctime
             " . $fromsql . $wheresql . "
             ORDER BY " . $orderby;
     if (empty($extra['csvdownload'])) {
@@ -5345,11 +5276,10 @@ function accesslist_stats_table($limit, $offset, $extra, $institution, $urllink)
         $item->hasaccessrules = !empty($item->access);
         $item->canbeviewed = $item->viewid ? can_view_view($item->viewid) : false;
         $item->pending = is_view_suspended($item->viewid);
-        $item->submittedstatus = add_submitted_label($item->submittedstatus, (bool)$item->submissionoriginal);
     }
 
     if (!empty($extra['csvdownload'])) {
-        $csvfields = array('displayname', 'userurl', 'title', 'views', 'hasaccessrules', 'submittedstatus');
+        $csvfields = array('displayname', 'userurl', 'title', 'views', 'hasaccessrules');
         $USER->set_download_file(generate_csv($data, $csvfields), $institution . 'accessstatistics.csv', 'text/csv', true);
     }
     $result['csv'] = true;

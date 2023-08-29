@@ -162,23 +162,6 @@ class Collection {
      */
     private $frameworkurl;
 
-    /**
-     * The collection this collection is a copy of.
-     * @var int
-     */
-    private $submissionoriginal = 0;
-
-    /**
-     * @var boolean
-     */
-    private $outcomeportfolio;
-
-    /**
-     * @var integer
-     */
-    private $outcomecategory;
-
-
     const UNSUBMITTED = 0;
     const SUBMITTED = 1;
     const PENDING_RELEASE = 2;
@@ -334,32 +317,21 @@ class Collection {
         }
         delete_records('collection_view','collection', $this->id);
         delete_records('tag', 'resourcetype', 'collection', 'resourceid', $this->id);
-        if (is_plugin_installed('lti', 'module')) {
+        if (is_plugin_active('lti', 'module')) {
             delete_records('lti_assessment_submission', 'collectionid', $this->id);
         }
         delete_records('existingcopy', 'collection', $this->id);
         delete_records('collection_template', 'collection', $this->id);
         delete_records('view_copy_queue', 'collection', $this->id);
-        if (is_plugin_installed('assessmentreport', 'module')) {
-            // Delete any submission history
-            delete_records('module_assessmentreport_history', 'event', 'collection', 'itemid', $this->id);
-        }
-        if (is_plugin_installed('submissions', 'module')) {
-            $submissionids = get_column('module_submissions', 'id', 'portfolioelementtype', 'collection', 'portfolioelementid', $this->id);
-            if ($submissionids) {
-                execute_sql("DELETE FROM {module_submissions_evaluation} WHERE submissionid IN (" . join(',', $submissionids) . ")");
-                execute_sql("DELETE FROM {module_submissions} WHERE id IN (" . join(',', $submissionids) . ")");
-            }
-        }
-        if (db_table_exists('outcome')) {
-            if ($outcomes = get_column('outcome', 'id', 'collection', $this->id)) {
-                foreach ($outcomes as $outcomeid) {
-                    delete_records('outcome_view_activity', 'outcome', $outcomeid);
-                }
-                delete_records('outcome', 'collection', $this->id);
-            }
-        }
         delete_records('collection', 'id', $this->id);
+        // Delete any submission history
+        delete_records('module_assessmentreport_history', 'event', 'collection', 'itemid', $this->id);
+        $submissionids = get_column('module_submissions', 'id', 'portfolioelementtype', 'collection', 'portfolioelementid', $this->id);
+        if ($submissionids) {
+            execute_sql("DELETE FROM {module_submissions_evaluation} WHERE submissionid IN (" . join(',', $submissionids) . ")");
+            execute_sql("DELETE FROM {module_submissions} WHERE id IN (" . join(',', $submissionids) . ")");
+        }
+
         // Secret url records belong to the collection, so remove them from the view.
         // @todo: add user message to whatever calls this.
         if ($viewids) {
@@ -557,10 +529,6 @@ class Collection {
         db_begin();
 
         $colltemplate = new Collection($templateid);
-        $issubmission = false;
-        if (isset($collectiondata['submissionoriginalcollection'])) {
-            $issubmission = ($collectiondata['submissionoriginalcollection'] > 0);
-        }
 
         $data = new stdClass();
         // Set a default name if one wasn't set in $collectiondata
@@ -582,15 +550,10 @@ class Collection {
         }
         else if (!isset($collectiondata['name'])) {
             $desiredname = $colltemplate->get('name');
-            if (!$issubmission) {
-                // This is not a submission, so we should tweak the name to
-                // show that it's a copy.
-                if (get_config('renamecopies')) {
-                    $desiredname = get_string('Copyof', 'mahara', $desiredname);
-                }
-                $desiredname = self::new_name($desiredname, (object)$collectiondata);
+            if (get_config('renamecopies')) {
+                $desiredname = get_string('Copyof', 'mahara', $desiredname);
             }
-            $data->name = $desiredname;
+            $data->name = self::new_name($desiredname, (object)$collectiondata);
         }
         else {
             $data->name = $collectiondata['name'];
@@ -611,14 +574,10 @@ class Collection {
         else {
             $data->owner = $userid;
         }
-
-        // Copy the Smart Evidence Framework and Progress Completion settings.
         $data->framework = $colltemplate->get('framework');
-        $data->progresscompletion = $colltemplate->get('progresscompletion');
-
         $data->submittedstatus = 0;
-        $data->submissionoriginal = $issubmission ? $collectiondata['submissionoriginalcollection'] : 0;
-        $data->outcomeportfolio = $colltemplate->get('outcomeportfolio');
+
+        $data->progresscompletion = $colltemplate->get('progresscompletion');
         // If owner is copying a collection they own then the copy is made unlocked
         $data->lock = (isset($data->owner) && $data->owner == $colltemplate->owner) ? 0 : $colltemplate->get('lock');
         $data->autocopytemplate = 0;
@@ -655,15 +614,7 @@ class Collection {
                 }
             }
 
-            if ($issubmission) {
-                $values['submissionoriginal'] = $v->id;
-                $values['submissionoriginalcollection'] = $collectiondata['submissionoriginalcollection'];
-            }
-
             list($view, $template, $copystatus) = View::create_from_template($values, $v->view, $userid, $checkaccess, $titlefromtemplate, $artefactcopies);
-            if ($issubmission) {
-                $view->copy_signoff_status($v->view);
-            }
             // Check to see if we need to re-map any framework evidence
             // and if a personal collection will be copied as another personal collection (copying to groups/institutions/site porttfolios will have no owner field)
             if (!empty($data->owner)) {
@@ -726,12 +677,11 @@ class Collection {
             }
         }
         // If there are views with framework evidence to re-map
-        $evidences = array();
-        if (!empty($evidenceviews) && !$issubmission) {
+        if (!empty($evidenceviews)) {
             // We need to get how the old views/artefacts/blocks/evidence fit together
             if (!empty($artefactcopies)) {
                 $evidences = get_records_sql_array('
-                    SELECT va.view, va.artefact, va.block, a.artefacttype, fe.*
+                    SELECT va.view, va.artefact, va.block, fe.*
                     FROM {view} v
                     JOIN {view_artefact} va ON va.view = v.id
                     JOIN {artefact} a ON a.id = va.artefact
@@ -740,54 +690,40 @@ class Collection {
                     AND a.id IN (' . join(',', array_keys($artefactcopies)) . ')
                     AND fe.annotation = va.block', array());
                 $newartefactcopies = array();
-
                 foreach ($artefactcopies as $ac) {
                     $newartefactcopies[$ac->newid] = 1;
                 }
-
-                // Get how the new views/artefacts/blocks fit together
+                // And get how the new views/artefacts/blocks fit together
                 $newblocks = get_records_sql_assoc('
-                        SELECT va.artefact, va.view, va.block
-                        FROM {view} v
-                        JOIN {view_artefact} va ON va.view = v.id
-                        JOIN {artefact} a ON a.id = va.artefact
-                        WHERE v.id IN (' . join(',', array_values($evidenceviews)) . ')
-                        AND a.id IN (' . join(',', array_keys($newartefactcopies)) . ')
-                        AND artefacttype = ?', array('annotation'));
+                    SELECT va.artefact, va.view, va.block
+                    FROM {view} v
+                    JOIN {view_artefact} va ON va.view = v.id
+                    JOIN {artefact} a ON a.id = va.artefact
+                    WHERE v.id IN (' . join(',', array_values($evidenceviews)) . ')
+                    AND a.id IN (' . join(',', array_keys($newartefactcopies)) . ')
+                    AND artefacttype = ?', array('annotation'));
 
-                // annotation artefacts and collective file artefacts too
                 if (!empty($evidences)) {
                     foreach ($evidences as $evidence) {
-                        if (
-                            key_exists($evidence->artefact, $artefactcopies)
-                            && key_exists($artefactcopies[$evidence->artefact]->newid, $newartefactcopies)
-                        ) {
-                            if ($evidence->artefacttype == 'annotation') {
-                                $newartefact = $artefactcopies[$evidence->artefact]->newid;
-                                // Not all the new artefacts are blocks.
-                                if (!empty($newblocks[$newartefact])) {
-
-                                    $newevidence = new stdClass();
-                                    $newevidence->artefact = $newartefact;
-                                    $newevidence->annotation = $newblocks[$newartefact]->block;
-                                    $newevidence->framework = $evidence->framework;
-                                    $newevidence->element = $evidence->element;
-                                    $newevidence->view = $newblocks[$newartefact]->view;
-                                    $newevidence->state = 0;
-                                    $newevidence->reviewer = null;
-                                    $newevidence->ctime = $evidence->ctime;
-                                    $newevidence->mtime = $evidence->mtime;
-                                    // Add the new annotation artefact/block - we don't need to copy files as
-                                    // they'll still be owned by the same person
-                                    insert_record('framework_evidence', $newevidence);
-                                }
-                            }
+                        if (key_exists($evidence->artefact, $artefactcopies) && key_exists($artefactcopies[$evidence->artefact]->newid, $newartefactcopies)) {
+                            $newartefact = $artefactcopies[$evidence->artefact]->newid;
+                            $newevidence = new stdClass();
+                            $newevidence->view = $newblocks[$newartefact]->view;
+                            $newevidence->artefact = $newartefact;
+                            $newevidence->annotation = $newblocks[$newartefact]->block;
+                            $newevidence->framework = $evidence->framework;
+                            $newevidence->element = $evidence->element;
+                            $newevidence->state = 0;
+                            $newevidence->reviewer = null;
+                            $newevidence->ctime = $evidence->ctime;
+                            $newevidence->mtime = $evidence->mtime;
+                            insert_record('framework_evidence', $newevidence);
                         }
                     }
                 }
             }
         }
-        if ($colltemplate->has_progresscompletion() && !$issubmission) {
+        if ($colltemplate->has_progresscompletion()) {
             $values['type'] = 'progress';
             list($view, $template, $copystatus) = View::create_from_template($values, $colltemplate->has_progresscompletion(), $userid, false, false, $artefactcopies);
             $numcopied['blocks'] += $copystatus['blocks'];
@@ -1000,37 +936,6 @@ class Collection {
                 'unselectcallback'   => 'delete_view_coverimage',
             ),
         );
-        if ($this->group && is_outcomes_group($this->group)) {
-            $institution = get_field('group', 'institution', 'id', $this->group);
-            $categories = get_records_select_array('outcome_category',  "institution = ?", array($institution));
-            $elements['outcomeportfolio'] = array(
-                'type'  => 'switchbox',
-                'title' => get_string('outcomeportfolio', 'collection'),
-                'description' => get_string('outcomeportfoliodesc', 'collection'),
-                'defaultvalue' => empty($categories) ? 0 : 1,
-                'disabled' => empty($categories),
-            );
-            $options = [];
-            if ($categories) {
-                foreach($categories as $cat) {
-                    $options[$cat->id] = $cat->title;
-                }
-                $elements['outcomecategory'] = array(
-                    'type'  => 'select',
-                    'title' => get_string('outcomecategory','collection'),
-                    'description' => get_string('outcomecategorydesc','collection'),
-                    'options' => $options,
-                    'collapseifoneoption' => true,
-                    'defaultvalue' => null,
-                );
-            }
-            else {
-                $elements['outcomecategory_html'] = array(
-                    'type' => 'html',
-                    'value' => get_string('outcomecategorymissing', 'collection', $institution),
-                );
-            }
-        }
         if ($frameworks = $this->get_available_frameworks()) {
             $options = array('' => get_string('noframeworkselected', 'module.framework'));
             foreach ($frameworks as $framework) {
@@ -1068,33 +973,6 @@ class Collection {
                 'defaultvalue' => 0,
             );
         }
-        $submissionorigin = $this->get_submission_origin();
-        if ($submissionorigin !== false) {
-            if ($submissionorigin != 0) {
-                $original = new Collection($submissionorigin);
-                $title = $original->get('name');
-                $url = $original->get_url();
-                $value = get_string('linktosubmissionoriginallink', 'collection', $url, $title);
-                $description = get_string('linktosubmissionoriginaldescription', 'collection');
-            }
-            else {
-                // The original has been deleted.
-                $value = get_string('linktosubmissionoriginaldeleted', 'collection');
-                $description = get_string('linktosubmissionoriginaldeleteddescription', 'collection');
-            }
-            $elements['linktosourceportfolio'] = array(
-                'type'  => 'html',
-                'title' => get_string('linktosubmissionoriginaltitle', 'collection'),
-                'value' => $value,
-                'description' => $description,
-            );
-            $elements['linkedtosourceportfolio'] = array(
-                'type'         => 'switchbox',
-                'title'        => get_string('linkedtosourceportfoliotitle','view'),
-                'description'  => get_string('linkedtosourceportfoliodescription','view'),
-                'defaultvalue' => 1,
-            );
-        }
 
         // Populate the fields with the existing values if any
         if (!empty($this->id)) {
@@ -1106,9 +984,7 @@ class Collection {
                     $elements[$k]['defaultvalue'] = ($this->get('coverimage') ? array($this->get('coverimage')) : null);
                 }
                 else {
-                    if (isset($this->$k)) {
-                        $elements[$k]['defaultvalue'] = $this->$k;
-                    }
+                    $elements[$k]['defaultvalue'] = $this->$k;
                 }
             }
             $elements['id'] = array(
@@ -1136,43 +1012,6 @@ class Collection {
         }
 
         return $elements;
-    }
-
-    /**
-     * Returns the submission origin id of the collection.
-     *
-     * Return is mixed:
-     *   - false if the collection is not a submission (no collection.submissionoriginal is set)
-     *   - 0 collection.submissionoriginal is set but the related collection does not exist
-     *   - integer collection id of the original collection to link to.
-     *
-     * @return integer|false
-     */
-    public function get_submission_origin() {
-        $submissionoriginal = $this->get('submissionoriginal');
-        if (empty($submissionoriginal)) {
-            // Not currently a submission.
-            return false;
-        }
-
-        if (get_record('collection', 'id', $submissionoriginal)) {
-            // We have a record.
-            return $submissionoriginal;
-        }
-        // If we get this far the submission original has been deleted.
-        return 0;
-    }
-
-    /**
-     * Returns true if the Collection is still a submission.
-     *
-     * This checks the submissionoriginal field that links this to the source
-     * Collection.
-     *
-     * @return boolean
-     */
-    public function is_submission() {
-        return (bool) $this->get_submission_origin();
     }
 
     /**
@@ -1243,27 +1082,6 @@ class Collection {
     }
 
     /**
-     * Returns the first plain view in the collection.
-     *
-     * This excludes special pages like the progress and Smart Evidence pages.
-     *
-     * @return View The first view of the collection, null if the collection is empty
-     */
-    public function first_plain_view() {
-        // A sanity check to ensure that the collection views are loaded.
-        if (empty($this->views['views'])) {
-            $this->views();
-        }
-        if (!empty($this->views['views'])) {
-            $v = $this->views['views'][0];
-            if (!empty($v->id)) {
-                return new View($v->id);
-            }
-        }
-        return null;
-    }
-
-    /**
      * Check that a collection can have a framework
      *
      * @return bool
@@ -1279,33 +1097,35 @@ class Collection {
      */
     public function can_have_progresscompletion() {
         $allowspc = false;
-        require_once(get_config('docroot') . 'lib/institution.php');
-        if ($this->institution) {
-            $institution = $this->institution;
-            $institution = new Institution($institution);
-            $allowspc = ($institution->progresscompletion) ? $institution : false;
-        }
-        else if ($this->group) {
-            $institution = get_field('group', 'institution', 'id', $this->group);
-            $institution = new Institution($institution);
-            $allowspc = ($institution->progresscompletion) ? $institution : false;
-        }
-        else {
-            $user = new User();
-            $user->find_by_id($this->owner);
-            $institutionids = array_keys($user->get('institutions'));
-            if (!empty($institutionids)) {
-                foreach ($institutionids as $institution) {
-                    $institution = new Institution($institution);
-                    if ($institution->progresscompletion == true) {
-                        $allowspc = $institution;
-                        break;
-                    }
-                }
+        if (is_plugin_active('signoff', 'blocktype')) {
+            require_once(get_config('docroot') . 'lib/institution.php');
+            if ($this->institution) {
+                $institution = $this->institution;
+                $institution = new Institution($institution);
+                $allowspc = ($institution->progresscompletion) ? $institution : false;
+            }
+            else if ($this->group) {
+                $institution = get_field('group', 'institution', 'id', $this->group);
+                $institution = new Institution($institution);
+                $allowspc = ($institution->progresscompletion) ? $institution : false;
             }
             else {
-                $institution = new Institution('mahara');
-                $allowspc = ($institution->progresscompletion) ? $institution : false;
+                $user = new User();
+                $user->find_by_id($this->owner);
+                $institutionids = array_keys($user->get('institutions'));
+                if (!empty($institutionids)) {
+                    foreach ($institutionids as $institution) {
+                        $institution = new Institution($institution);
+                        if ($institution->progresscompletion == true) {
+                            $allowspc = $institution;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    $institution = new Institution('mahara');
+                    $allowspc = ($institution->progresscompletion) ? $institution : false;
+                }
             }
         }
         return $allowspc;
@@ -1411,15 +1231,6 @@ class Collection {
     }
 
     /**
-     * Check that a collection has oucomes
-     *
-     * @return id of page or false
-     */
-    public function has_outcomes() {
-        return $this->outcomeportfolio && $this->outcomecategory;
-    }
-
-    /**
      * Check that a collection has progress completion enable
      * - The collection can have progress completion enabled
      * - It has progress completion enabled
@@ -1453,14 +1264,9 @@ class Collection {
 
     /**
      * Add a progress page to the progresscompletion collection
-     *
      * If the collection already has a progress page then nothing happens
-     *
-     * @param boolean $return Return the view of the progress page just created
-     *
-     * @return View|void View of the progress page or void
      */
-    public function add_progresscompletion_view($return = false) {
+    public function add_progresscompletion_view() {
         if ($this->has_progresscompletion(false) && !$this->has_progresscompletion(true)) {
             // We can add a progress page as it is allowed a
             // progress page but doesn't already have one.
@@ -1488,6 +1294,7 @@ class Collection {
             $systemprogressviewid = get_field('view', 'id', 'institution', 'mahara', 'template', View::SITE_TEMPLATE, 'type', 'progress');
             $artefactcopies = array();
             list($view) = View::create_from_template($viewdata, $systemprogressviewid, $author, false, false, $artefactcopies);
+
             // Update any existing pages sortorder
             execute_sql("UPDATE {collection_view} SET displayorder = displayorder + 1 WHERE collection = ?", array($this->id));
             // Add progress page as first page of collection
@@ -1499,50 +1306,6 @@ class Collection {
             if (!empty($this->views())) {
                 $this->add_views(array($view->get('id')), 1);
             }
-            if ($return) {
-                return $view;
-            }
-        }
-    }
-
-    /**
-     * Copy the progresscompletion view from the original collection to this one.
-     *
-     * @param Collection $original The original collection
-     */
-    public function copy_progresscompletion_view($original, $submissiondetail = []) {
-
-        if ($this->get('progresscompletion')) {
-            $pccopy = $this->add_progresscompletion_view(true);
-            // Update the progresscompletion view with details from the original collection.
-            $pcoriginal = new View($original->has_progresscompletion(true));
-
-            // Copy some fields from the original progress view to the copy.
-            $fields = ['ctime', 'mtime', 'atime'];
-            for ($i = 0; $i < count($fields); $i++) {
-                $pccopy->set($fields[$i], $pcoriginal->get($fields[$i]));
-            }
-            $artefactcopies = array();
-            $pccopy->copy_contents($pcoriginal, $artefactcopies, true);
-            foreach ($submissiondetail as $key => $value) {
-                if ($value) {
-                    $pccopy->set($key, $value);
-                }
-            }
-            $pccopy->set('submissionoriginal', $pcoriginal->get('id'));
-
-            if (!empty($submissiondetail['submittedgroup'])) {
-                $viewaccess = [
-                    'role'      => 'admin',
-                    'view'        => $pccopy->get('id'),
-                    'group'       => $submissiondetail['submittedgroup'],
-                    'visible'     => 0,
-                    'allowcomments' => 1,
-                    'ctime' => db_format_timestamp(time()),
-                ];
-                ensure_record_exists('view_access', $viewaccess, $viewaccess, 'id');
-            }
-            $pccopy->commit();
         }
     }
 
@@ -1563,24 +1326,9 @@ class Collection {
         return $option;
     }
 
-    /**
-     * Get collection outcomes option for collection navigation
-     *
-     * @return object $option;
-     */
-    public function collection_nav_outcomes_option() {
-        $option = new stdClass();
-        $option->id = $this->id;
-        $option->title = get_string('Outcomes', 'group');
-        $option->outcomes = true;
-
-        $option->fullurl = self::get_outcomes_url($option);
-
-        return $option;
-    }
 
     /**
-     * Get collection progress completion option for collection navigation
+     * Get collection framework option for collection navigation
      *
      * @return object $option;
      */
@@ -1628,23 +1376,7 @@ class Collection {
     }
 
     /**
-     * Making the outcomes url
-     *
-     * @param object $data    Either a collection or standard object
-     * @param bool   $fullurl Return full url rather than relative one
-     *
-     * @return $url
-     */
-    public static function get_outcomes_url($data, $fullurl = true) {
-        $url = 'collection/outcomesoverview.php?id=' . $data->id;
-        if ($fullurl) {
-            return get_config('wwwroot') . $url;
-        }
-        return $url;
-    }
-
-    /**
-     * Making the progress completion url
+     * Making the framework url
      *
      * @param object $data    Either a collection or standard object
      * @param bool   $fullurl Return full url rather than relative one
@@ -1887,13 +1619,7 @@ class Collection {
      */
     public function post_edit_redirect_url($new=false, $copy=false, $urlparams=null) {
         $redirecturl = get_config('wwwroot');
-
-        // Group owned collection with outcomes
-        if ($this->get('group') && $this->get('outcomeportfolio')) {
-          $urlparams['id'] = $this->get('id');
-          $redirecturl .= 'collection/manageoutcomes.php';
-        }
-        else if ($new || $copy) {
+        if ($new || $copy) {
             $urlparams['id'] = $this->get('id');
             $redirecturl .= 'collection/views.php';
         }
@@ -1977,17 +1703,7 @@ class Collection {
 
         $views = $this->views();
         if (!empty($views)) {
-            if ($this->has_outcomes()) {
-                if ($full) {
-                    $this->fullurl = Collection::get_outcomes_url($this);
-                    return $this->fullurl;
-                }
-                else {
-                    $this->outcomesurl = Collection::get_outcomes_url($this, false);
-                    return $this->outcomesurl;
-                }
-            }
-            else if ($this->has_progresscompletion()) {
+            if ($this->has_progresscompletion()) {
                 if ($full) {
                     $this->fullurl = Collection::get_progresscompletion_url($this);
                     return $this->fullurl;
@@ -2094,11 +1810,10 @@ class Collection {
      *
      * @param LiveUser|null $releaseuser The Account releasing the Portfolio.
      * @param array $releasemessageoverrides Optional array of string keys to use rather than the defaults.
-     * @param bool $returntouser If true, the submissionoriginal will also be cleared.
      *
      * @return void
      */
-    public function release($releaseuser=null, $releasemessageoverrides = [], $returntouser = false) {
+    public function release($releaseuser=null, $releasemessageoverrides = []) {
 
         if (!$this->is_submitted()) {
             throw new ParameterException("Collection with id " . $this->id . " has not been submitted");
@@ -2113,21 +1828,16 @@ class Collection {
 
         try {
             db_begin();
-            $sql = '';
-            $set = 'submittedgroup = NULL,
-                    submittedhost = NULL,
-                    submittedtime = NULL,
-                    submittedstatus = ' . self::UNSUBMITTED;
-            if ($returntouser) {
-                $set .= ', submissionoriginal = ' . self::UNSUBMITTED;
-            }
             execute_sql('
             UPDATE {collection}
-            SET ' . $set . '
+            SET submittedgroup = NULL,
+                submittedhost = NULL,
+                submittedtime = NULL,
+                submittedstatus = ' . self::UNSUBMITTED . '
             WHERE id = ?',
                         array($this->id)
             );
-            View::_db_release($viewids, $this->owner, $this->submittedgroup, $returntouser);
+            View::_db_release($viewids, $this->owner, $this->submittedgroup);
             safe_require('module', 'submissions');
             if (PluginModuleSubmissions::is_active() && $this->submittedgroup && !group_external_group($this->submittedgroup)) {
                 PluginModuleSubmissions::release_submission($this, $releaseuser);
@@ -2262,31 +1972,21 @@ class Collection {
      * @param integer $owner The owner of the collection (if not just $USER)
      * @param boolean $sendnotification
      * @throws CollectionSubmissionException
-     * @return Collection The copy of the collection that was submitted
+     * @return void|false
      */
     public function submit($group = null, $submittedhost = null, $owner = null, $sendnotification=true) {
-        global $USER, $SESSION;
+        global $USER;
         require_once('group.php');
 
+        if ($this->is_submitted()) {
+            throw new CollectionSubmissionException(get_string('collectionalreadysubmitted', 'view'));
+        }
         // Gotta provide one or the other
         if (!$group && !$submittedhost) {
-            throw new CollectionSubmissionException(get_string('cantsubmitneedgrouporsubmittedhost', 'view'));
-        }
-        $collectionid = $this->id;
-        $firstview = $this->first_plain_view();
-
-        $copy = copyview($firstview->get('id'), false, null, $collectionid, true);
-
-        if ($copy === false) {
-            $SESSION->add_error_msg(get_string('cantsubmitcopyfailed', 'view'));
-            // Redirect back to the portfolio they came from. Any messages are in the $SESSION.
-            redirect($this->get_url());
+            return false;
         }
 
-        // Set the submissionoriginal field.
-        $copy->set('submissionoriginal', $this->get('id'));
-
-        $viewids = $copy->get_viewids(true);
+        $viewids = $this->get_viewids(true);
         if (!$viewids) {
             throw new CollectionSubmissionException(get_string('cantsubmitemptycollection', 'view'));
         }
@@ -2317,37 +2017,21 @@ class Collection {
 
         try {
             db_begin();
-            $submissiondetail = [
-                'submittedgroup' => false,
-                'submittedhost' => false,
-                'submittedtime' => false,
-                'submittedstatus' => false,
-            ];
             View::_db_submit($viewids, $group, $submittedhost, $owner);
             if ($group) {
-                $copy->set('submittedgroup', $group->id);
-                $submissiondetail['submittedgroup'] = $group->id;
-                $copy->set('submittedhost', null);
+                $this->set('submittedgroup', $group->id);
+                $this->set('submittedhost', null);
             }
             else {
-                $copy->set('submittedgroup', null);
-                $copy->set('submittedhost', $submittedhost);
-                $submissiondetail['submittedhost'] = $submittedhost;
+                $this->set('submittedgroup', null);
+                $this->set('submittedhost', $submittedhost);
             }
-            $time = time();
-            $date = format_date($time, 'strftimerecentyear');
-            $copy->set('submittedtime', $time);
-            $submissiondetail['submittedtime'] = $time;
-            $copy->set('submittedstatus', self::SUBMITTED);
-            $submissiondetail['submittedstatus'] = self::SUBMITTED;
-            $copy->set('name', $copy->get('name') . get_string('submittedtimetitle', 'view', $date));
-            // Copy progress completion view if it exists.
-            $copy->copy_progresscompletion_view($this, $submissiondetail);
-            $copy->commit();
+            $this->set('submittedtime', time());
+            $this->set('submittedstatus', self::SUBMITTED);
+            $this->commit();
             safe_require('module', 'submissions');
             if (PluginModuleSubmissions::is_active() && $group && !group_external_group($group)) {
-                // This is a submission. Add that to the title.
-                PluginModuleSubmissions::add_submission($copy, $group);
+                PluginModuleSubmissions::add_submission($this, $group);
             }
             db_commit();
         }
@@ -2355,24 +2039,19 @@ class Collection {
             db_rollback();
             throw $e;
         }
-        handle_event(
-            'addsubmission',
-            array(
-                'id' => $copy->id,
-                'eventfor' => 'collection',
-                'name' => $copy->name,
-                'group' => ($group) ? $group->id : null,
-                'groupname' => ($group) ? $group->name : null,
-                'externalhost' => ($submittedhost) ? $submittedhost : null,
-            )
-        );
+        handle_event('addsubmission', array('id' => $this->id,
+                                            'eventfor' => 'collection',
+                                            'name' => $this->name,
+                                            'group' => ($group) ? $group->id : null,
+                                            'groupname' => ($group) ? $group->name : null,
+                                            'externalhost' => ($submittedhost) ? $submittedhost : null));
         if ($group && $sendnotification) {
             activity_occurred(
                 'groupmessage',
                 array(
                     'group'         => $group->id,
                     'roles'         => $group->roles,
-                    'url'           => $copy->get_url(false),
+                    'url'           => $this->get_url(false),
                     'strings'       => (object) array(
                         'urltext' => (object) array(
                             'key'     => 'Collection',
@@ -2388,7 +2067,7 @@ class Collection {
                             'section' => 'activity',
                             'args'    => array(
                                 display_name($USER, null, false, true),
-                                $copy->name,
+                                $this->name,
                                 $group->name,
                             ),
                         ),
@@ -2396,7 +2075,6 @@ class Collection {
                 )
             );
         }
-        return $copy;
     }
 
     /**
@@ -2519,7 +2197,7 @@ class Collection {
         $numberofactions = 0;
         foreach ($this->views['views'] as $view) {
             $viewobj = new View($view->view);
-            if ($viewobj->has_signoff()) {
+            if ($viewobj->has_signoff_block()) {
                 $numberofactions++;
                 if (ArtefactTypePeerassessment::is_signed_off($viewobj)) {
                     $numberofcompletedactions++;
@@ -2534,13 +2212,6 @@ class Collection {
         }
         if ($numberofactions == 0) return false;
         return array(round(($numberofcompletedactions/$numberofactions)*100), $numberofactions);
-    }
-
-    public function get_outcomes_complete_percentage() {
-      $complete = get_column('outcome', 'complete', 'collection', $this->get('id'));
-      $outcomenumber = count($complete);
-      $completednumber = count(array_filter($complete));
-      return array(round(($completednumber/$outcomenumber)*100), $outcomenumber);
     }
 
     /**

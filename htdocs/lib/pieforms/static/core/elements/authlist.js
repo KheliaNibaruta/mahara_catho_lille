@@ -217,9 +217,6 @@
         if (data.new) {
             PieformAuthlist.insert_auth(data.id, data.name, data.authname);
         }
-        else if (data.name != data.authname) {
-            jQuery('#instanceDiv' + data.id + ' .authLabel a').text(data.name);
-        }
         dock.hide();
     }
 

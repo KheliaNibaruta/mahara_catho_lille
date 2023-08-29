@@ -46,20 +46,17 @@ if (method_exists($authobj, 'change_password')) {
             'title' => get_string('oldpassword'),
             'help'  => true,
             'autocomplete' => 'off',
-            'toggledisplay' => true
         );
     }
     $elements['password1'] = array(
         'type' => 'password',
         'title' => get_string('newpassword'),
         'description' => get_password_policy_description(),
-        'showstrength' => true,
-        'toggledisplay' => true
+        'showstrength' => true
     );
     $elements['password2'] = array(
         'type' => 'password',
-        'title' => get_string('confirmpassword'),
-        'toggledisplay' => true
+        'title' => get_string('confirmpassword')
     );
 }
 else if ($url = get_config_plugin_instance('auth', $USER->authinstance, 'changepasswordurl')) {

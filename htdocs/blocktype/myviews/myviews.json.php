@@ -15,7 +15,7 @@
 
 define('INTERNAL', 1);
 define('JSON', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 
 require(dirname(dirname(dirname(__FILE__))) . '/init.php');
 
@@ -42,14 +42,13 @@ $views = View::view_search(
         $offset, // $offset
         true, // $extra
         null, // $sort
-        array('portfolio', 'progress'), // $types
+        array('portfolio'), // $types
         null, // $collection
         null, // $accesstypes
         null, // $tag
         null, // $viewid
         null, // $excludeowner
-        true, // $groupbycollection
-        true // $excludesubmissions
+        true // $groupbycollection
 );
 $views = (array)$views;
 $baseurl = $dashboard->get_url();

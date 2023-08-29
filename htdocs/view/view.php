@@ -10,7 +10,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('SECTION_PLUGINTYPE', 'core');
 define('SECTION_PLUGINNAME', 'view');
 define('SECTION_PAGE', 'view');
@@ -33,7 +33,6 @@ require_once(get_config('docroot') . 'export/lib.php');
 // an assignment submission)
 $mnetviewid = param_integer('mnetviewid', false);
 $mnetcollid = param_integer('mnetcollid', false);
-
 if (
         ($mnetviewid || $mnetcollid)
         && $SESSION->get('mnetuser')
@@ -124,34 +123,12 @@ if ($blockid = param_integer('blockconfig', 0)) {
     }
 }
 
-// Prepare the signoff verify form in advance - used to be a block
-$signoff_html = $view->has_signoff() ? $view->get_signoff_verify_form() : '';
-
-$owner    = $view->get('owner');
-$viewtype = $view->get('type');
-
-if ($viewtype == 'profile' || $viewtype == 'dashboard' || $viewtype == 'grouphomepage') {
-    redirect($view->get_url());
-}
-
 $institution = $view->get('institution');
 View::set_nav($groupid, $institution, false, false, false);
 // Comment list pagination requires limit/offset params
 $limit       = param_integer('limit', 10);
 $offset      = param_integer('offset', 0);
-$showcomment_context = '';
-$showcomment = param_integer('showcomment', null); // default
-
-// For other showassessment, showfeedback, as to not hit the wrong db table (i.e. comment)
-$show_comment_type = '';
-$show_comment_types = ['comment', 'feedback', 'assessment'];
-foreach ($show_comment_types as $type) {
-    $show_context = 'show' . $type;
-    if (param_integer($show_context, null) != null) {
-        $$show_context = param_integer($show_context, null);
-        $show_comment_type = $type;
-    }
-}
+$showcomment = param_integer('showcomment', null);
 
 // Create the "make comment private form" now if it's been submitted
 if (param_exists('make_public_submit')) {
@@ -159,6 +136,13 @@ if (param_exists('make_public_submit')) {
 }
 else if (param_exists('delete_comment_submit')) {
     pieform(ArtefactTypeComment::delete_comment_form(param_integer('comment'), param_integer('blockid', null), param_integer('artefactid', null), param_integer('threaded', null)));
+}
+
+$owner    = $view->get('owner');
+$viewtype = $view->get('type');
+
+if ($viewtype == 'profile' || $viewtype == 'dashboard' || $viewtype == 'grouphomepage') {
+    redirect($view->get_url());
 }
 
 //pass down the artefact id of the artefact that was just commented on via the modal pieform
@@ -288,33 +272,13 @@ else if ($user_logged_in && $access_via_group) {
         $releaseform = $text;
     }
     else {
-        $exporttype = $collection ? 'collection' : 'view';
-        $exporttypeid = $collection ? $collection->get('id') : $view->get('id');
-        $exporttypeowner = $collection ? $collection->get('owner') : $view->get('owner');
-        $failed = has_export_failed($exporttype, $exporttypeid, $exporttypeowner);
-        if (($USER->get('admin') || $USER->is_institutional_admin()) && $failed) {
-            $releaseform = $text . ' ' . get_string('submittedpendingreleasefailed', 'view', get_config('wwwroot') . 'admin/users/exportqueue.php');
-        }
-        else {
-            $releaseform = $text . ' ' . get_string('submittedpendingrelease', 'view');
-        }
+        $releaseform = $text . ' ' . get_string('submittedpendingrelease', 'view');
     }
 
     if (!empty($ltigradeform)) {
         $releaseform .= $ltigradeform;
     }
 
-}
-else if ($is_owner) {
-    $releasecollection = !empty($collection);
-    $text = '';
-    if ($releasecollection && $ctime = $collection->get('submittedtime')) {
-        $text = get_string('collectionsubmittedtohoston', 'view', format_date(strtotime($ctime)));
-    }
-    else if ($ctime = $view->get('submittedtime')) {
-        $text = get_string('viewsubmittedtohoston', 'view', format_date(strtotime($ctime)));
-    }
-    $releaseform = $text;
 }
 else {
     $releaseform = '';
@@ -509,7 +473,7 @@ if (!$view->is_public()) {
     $headers[] = '<meta name="robots" content="noindex">';  // Tell search engines not to index non-public views
 }
 
-$can_edit = $USER->can_edit_view($view) && !$submittedgroup && !$view->is_submitted() && !$view->is_submission();
+$can_edit = $USER->can_edit_view($view) && !$submittedgroup && !$view->is_submitted();
 if ($view->get_collection()) {
     $can_edit = $can_edit && $USER->can_edit_collection($view->get_collection());
 }
@@ -548,7 +512,7 @@ if (!($USER->has_peer_role_only($view) && $owner && !$ownerobj->peers_allowed_co
 
         $mincolumns = 'null';
         if ( $view->get('accessibleview')) {
-            $mincolumns = BlockInstance::GRIDSTACK_CONSTANTS['desktopWidth'];
+            $mincolumns = '12';
         }
 
         $blocks = $view->get_blocks();
@@ -611,22 +575,13 @@ $smarty = smarty(
 );
 
 $commentonartefact = param_integer('artefact', null);
-$show_comment_id = 0;
 // doublecheck it's a comment on  artefact in case is old email
-if ($show_comment_type) {
-    $show_comment_id = ${'show' . $show_comment_type};
-    $artefacttype = get_field('artefact', 'artefacttype', 'id', $show_comment_id);
-    if ($artefacttype) {
-        $classname = generate_artefact_class_name($artefacttype);
-        $tmpcomment = new $classname($show_comment_id);
-        if (property_exists($tmpcomment, 'onartefact') && $tmpcomment->get('onartefact') && !$commentonartefact) {
-            redirect(get_config('wwwroot') . 'view/view.php?id=' . $viewid . '&show' . $show_comment_type . '=' .
-                $show_comment_id . '&modal=1&artefact=' . $tmpcomment->get('onartefact'));
-        }
-    }
-    else {
-        // Comment id is not valid - the comment may have already been deleted
-        redirect(get_config('wwwroot') . 'view/view.php?id=' . $viewid);
+if ($showcomment) {
+    $artefacttype = get_field('artefact', 'artefacttype', 'id', $showcomment);
+    $classname = generate_artefact_class_name($artefacttype);
+    $tmpcomment = new $classname($showcomment);
+    if ($tmpcomment->get('onartefact') && !$commentonartefact) {
+        redirect(get_config('wwwroot') . 'view/view.php?id=' . $viewid . '&showcomment=' . $showcomment . '&modal=1&artefact=' . $tmpcomment->get('onartefact'));
     }
 }
 
@@ -634,8 +589,7 @@ $javascript = <<<EOF
 var viewid = {$viewid};
 var showmore = {$showmore};
 var commentonartefact = '{$commentonartefact}';
-var showcommentid = '{$show_comment_id}';
-let showCommentType = '{$show_comment_type}'
+var showcommentid = '{$showcomment}';
 
 jQuery(function () {
     paginator = {$feedback->pagination_js}
@@ -705,25 +659,14 @@ jQuery(window).on('blocksloaded', {}, function() {
  */
 function focusOnShowComment() {
     setTimeout(function() {
-        const commentIdString = showCommentType + showcommentid;
+        const commentIdString = 'comment' + showcommentid;
 
         // Identify the comment by focusing on the author link
-        // Open the page comments
-        if (showCommentType == 'comment') {
-            $(".comment-container button.collapsed").trigger('click');
-        }
-        let commentElements = $("#" + commentIdString + " a");
-        if (commentElements) {
-            let author_link = '';
-            if (commentElements.length > 1) {
-                author_link = commentElements[1];
-            }
-            else {
-                author_link = commentElements[0];
-            }
-            $(author_link).focus();
-            scrollToComment(commentIdString);
-        }
+        $(".comment-container button.collapsed").trigger('click');
+
+        const author_link = $("#" + commentIdString + " a")[1];
+        author_link.focus();
+        scrollToComment(commentIdString);
     }, 500);
 }
 
@@ -735,9 +678,6 @@ function focusOnShowComment() {
 function scrollToComment(commentIdString) {
     setTimeout(function() {
         const element = document.getElementById(commentIdString);
-        if (!element) {
-            return;
-        }
         const headerOffset = $('header').height();
         const sitemessagesOffset = $('.site-messages').height();
         // Scroll down for page comments
@@ -845,10 +785,7 @@ if ($collection) {
             if ($collection->has_progresscompletion()) {
                 array_unshift($viewnav, $collection->collection_nav_progresscompletion_option());
             }
-            if ($collection->has_outcomes()) {
-                array_unshift($viewnav, $collection->collection_nav_outcomes_option());
-            }
-            $smarty->assign('collectionnav', $viewnav);
+            $smarty->assign('collection', $viewnav);
         }
     }
     $smarty->assign('collectiontitle', $collection->get('name'));
@@ -882,33 +819,14 @@ if ($view->is_anonymous()) {
   $smarty->assign('anonymous', FALSE);
 }
 
-// Navigation title if the page is part of a collection.
+
 $titletext = ($collection && $shownav) ? hsc($collection->get('name')) : $view->display_title(true, false, false);
-$smarty->assign('maintitle', $titletext);
-
-// Page title.
-$title = hsc(TITLE);
-
-if ($titletext !== $title) {
-    $smarty->assign('title', $title);
-}
-
 $smarty->assign('lastupdatedstr', $view->lastchanged_message());
 $smarty->assign('visitstring', $view->visit_message());
 $smarty->assign('accessurl', get_config('wwwroot') . 'view/accessurl.php?return=view&id=' . $viewid . (!empty($collection) ? '&collection=' . $collection->get('id') : '' ));
 if ($can_edit) {
     $smarty->assign('editurl', get_config('wwwroot') . 'view/blocks.php?id=' . $viewid);
     $smarty->assign('usercaneditview', TRUE);
-}
-if ($view->is_submission()) {
-    $smarty->assign('issubmission', true);
-}
-if ($collection) {
-    // $smarty->assign('iscollection', true);
-    $smarty->assign('configureurl', get_config('wwwroot') . 'collection/edit.php?id=' . $collection->get('id'));
-}
-else {
-    $smarty->assign('configureurl', get_config('wwwroot') . 'view/editlayout.php?id=' . $viewid);
 }
 if ($can_copy) {
     $smarty->assign('copyurl', get_config('wwwroot') . 'view/copy.php?id=' . $viewid . (!empty($collection) ? '&collection=' . $collection->get('id') : ''));
@@ -922,6 +840,10 @@ if ($versions->count > 0) {
     $smarty->assign('versionurl', get_config('wwwroot') . 'view/versioning.php?view=' . $viewid);
 }
 $smarty->assign('createversionurl', get_config('wwwroot') . 'view/createversion.php?view=' . $viewid);
+
+$title = hsc(TITLE);
+
+$smarty->assign('maintitle', $titletext);
 
 // Provide a link for roaming teachers to return
 $showmnetlink = false;
@@ -992,37 +914,16 @@ if ($viewgroupform) {
     $smarty->assign('view_group_submission_form', $viewgroupform);
 }
 
+if ($titletext !== $title) {
+    $smarty->assign('title', $title);
+}
+
 $smarty->assign('userisowner', ($owner && $owner == $USER->get('id')));
 
 $returnto = $view->get_return_to_url_and_title();
 $smarty->assign('url', $returnto['url']);
 $smarty->assign('linktext', $returnto['title']);
 $smarty->assign('viewid', $view->get('id'));
-$smarty->assign('group', $view->get('group'));
-
-// Activity data form
-function activity_support_submit() {
-    redirect('/view/view.php?id=' . param_integer('id'));
-}
-
-if ($view->get('group') && $view->get('type') == 'activity') {
-    $activity_data = $view->get_view_activity_data();
-    $group = $view->get('group');
-    $smarty->assign('activity', $activity_data);
-    $smarty->assign('is_activity_page', $view->get('type') == 'activity');
-    $can_edit_layout = View::check_can_edit_activity_page_info($group, true);
-    $smarty->assign(
-        'activity_support',
-        $view->get_activity_support_display_edit_form($can_edit_layout && !$activity_data->achieved)
-    );
-    $smarty->assign('can_edit_layout', $can_edit_layout);
-    $smarty->assign('usercaneditview', $can_edit_layout);
-    $smarty->assign('activity_signoff_html', $signoff_html);
-}
-else {
-    $smarty->assign('signoff_html', $signoff_html);
-}
-
 $smarty->display('view/view.tpl');
 
 mahara_touch_record('view', $viewid); // Update record 'atime'

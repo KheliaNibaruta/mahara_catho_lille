@@ -61,7 +61,6 @@ class Institution {
         'skins' => 1,
         'tags' => 0,
         'progresscompletion' => 0,
-        'outcomeportfolio' => 0,
     );
 
     // This institution's config settings
@@ -1311,8 +1310,8 @@ function plugin_institution_prefs_form_elements(Institution $institution = null)
         if (!safe_require_plugin($i->plugintype, $i->name)) {
             continue;
         }
-        $classname = generate_class_name($i->plugintype, $i->name);
-        $elements = array_merge($elements, $classname::get_institutionprefs_elements($institution));
+        $elements = array_merge($elements, call_static_method(generate_class_name($i->plugintype, $i->name),
+                'get_institutionprefs_elements', $institution));
     }
     return $elements;
 }
@@ -1330,8 +1329,7 @@ function plugin_institution_prefs_validate(Pieform $form, $values) {
         if (!safe_require_plugin($i->plugintype, $i->name)) {
             continue;
         }
-        $classname = generate_class_name($i->plugintype, $i->name);
-        $classname::institutionprefs_validate($form, $values);
+        call_static_method(generate_class_name($i->plugintype, $i->name), 'institutionprefs_validate', $form, $values);
     }
 }
 
@@ -1349,8 +1347,8 @@ function plugin_institution_prefs_submit(Pieform $form, $values, Institution $in
         if (!safe_require_plugin($i->plugintype, $i->name)) {
             continue;
         }
-        $classname = generate_class_name($i->plugintype, $i->name);
-        $classname::institutionprefs_submit($form, $values, $institution);
+
+        call_static_method(generate_class_name($i->plugintype, $i->name), 'institutionprefs_submit', $form, $values, $institution);
     }
 }
 

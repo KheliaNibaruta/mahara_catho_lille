@@ -817,7 +817,6 @@ function core_install_lastcoredata_defaults() {
     require_once('view.php');
     install_system_portfolio_view();
     install_system_progress_view();
-    install_system_activity_view();
 
     require_once('license.php');
     install_licenses_default();
@@ -1071,14 +1070,13 @@ function core_install_firstcoredata_defaults() {
         insert_record('cron', $cron);
     }
 
-    $viewtypes = array('dashboard', 'portfolio', 'profile', 'grouphomepage', 'progress', 'activity');
+    $viewtypes = array('dashboard', 'portfolio', 'profile', 'grouphomepage', 'progress');
     foreach ($viewtypes as $vt) {
         insert_record('view_type', (object)array(
             'type' => $vt,
         ));
     }
     db_commit();
-
 }
 
 
@@ -1254,7 +1252,7 @@ function install_blocktype_categories_for_plugin($blocktype) {
     $classname = generate_class_name('blocktype', $blocktype);
     $categories = $classname::get_categories();
     if ($categories) {
-        foreach ($categories as $k => $v) {
+        foreach ($categories as $k=>$v) {
             if (is_string($k) && is_int($v)) {
                 // New block with name => sortorder array.
                 $cat = $k;
@@ -1473,6 +1471,9 @@ function site_warnings() {
     if (ini_get_bool('magic_quotes_runtime')) {
         $warnings[] = get_string('magicquotesruntime', 'error');
     }
+    if (ini_get_bool('magic_quotes_sybase')) {
+        $warnings[] = get_string('magicquotessybase', 'error');
+    }
 
     // Check if the host returns a usable value for the timezone identifier %z
     $tz_count_date = new DateTime();
@@ -1485,7 +1486,6 @@ function site_warnings() {
     }
 
     // Check for low security (i.e. not random enough) session IDs
-    // phpcs:ignore
     if (version_compare(PHP_VERSION, '7.1.0') < 0 && (int)ini_get('session.entropy_length') < 16) {
         $warnings[] = get_string('notenoughsessionentropy', 'error');
     }

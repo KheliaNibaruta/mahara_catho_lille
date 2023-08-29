@@ -88,10 +88,9 @@ var CurrentSubmissionsRelease = (function($) {
           console.log($('#searchresults input.selectcontentrelease').length);
           $('#searchresults input.selectcontentrelease').each(function() {
               var value = $(this).val();
-              var releasetype = $(this).data('releasetype');
               $(this).on('change', function() {
                   if ($(this).prop('checked')) {
-                      self.selectcontentrelease[value] = releasetype;
+                      self.selectcontentrelease[value] = 1;
                   }
                   else {
                       delete self.selectcontentrelease[value];
@@ -104,7 +103,7 @@ var CurrentSubmissionsRelease = (function($) {
           if ($('#selectallrelease').length) {
               $('#selectallrelease').on("click", function() {
                   $('#searchresults input.selectcontentrelease').each(function() {
-                      self.selectcontentrelease[$(this).val()] = $(this).data('releasetype');
+                      self.selectcontentrelease[$(this).val()] = 1;
                       $(this).prop('checked', true);
                   });
                   return false;
@@ -127,15 +126,15 @@ var CurrentSubmissionsRelease = (function($) {
                       $('#' + formid).append($('<input>', {
                           'type': 'checkbox',
                           'name': 'releaseids[' + j + ']',
-                          'value': self.selectcontentrelease[j],
+                          'value': j,
                           'class': 'd-none',
                           'checked': 'checked'
                       }));
                       countrelease++;
                   }
               }
-              var releasebtnpressed = ($(this).attr('name') == 'releasesubmissions' || $(this).attr('name') == 'releaseandreturnsubmissions');
-              if (countrelease && releasebtnpressed) {
+
+              if ((countrelease && $(this).attr('name') == 'releasesubmissions')) {
                   $('#nocontentselected').addClass('d-none');
                   $('#' + formid).append($('<input>', {
                       'type': 'hidden',

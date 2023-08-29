@@ -29,7 +29,7 @@
 define('INTERNAL', 1);
 define('JSON', 1);
 define('NOSESSKEY', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 
 require(dirname(dirname(dirname(dirname(__FILE__)))) . '/init.php');
 require_once(get_config('docroot') . 'webservice/lib.php');
@@ -72,11 +72,11 @@ $sso = false;
 $basic = false;
 foreach ($authplugins as $plugin) {
     $classname = 'PluginAuth' . ucfirst(strtolower($plugin));
-    $pluginelements = $classname::login_form_elements();
+    $pluginelements = call_static_method($classname, 'login_form_elements');
     if (!empty($pluginelements)) {
         $sso = true;
     }
-    if ($classname::need_basic_login_form()) {
+    if (call_static_method($classname, 'need_basic_login_form')) {
         $basic = true;
     }
 }

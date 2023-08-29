@@ -32,7 +32,6 @@ $string['revision'] = 'Revision';
 $string['evaluated'] = 'Evaluated';
 
 $string['unassignedselectboxitem'] = '- Unassigned -';
-$string['releaseandreturn'] = 'Release and return';
 
 // Table messages
 $string['releasesubmission'] = 'Complete assessment and release submitted portfolio?';

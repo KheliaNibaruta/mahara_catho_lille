@@ -45,7 +45,6 @@ $form = pieform(array(
 ));
 
 $smarty = smarty();
-setpageicon($smarty, 'icon-people-group');
 $smarty->assign('subheading', TITLE);
 $smarty->assign('message', get_string('groupconfirmdelete', 'group'));
 $smarty->assign('form', $form);

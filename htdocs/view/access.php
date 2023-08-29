@@ -25,7 +25,7 @@ if ($collectionid = param_integer('collection', null)) {
     $collection = new Collection($collectionid);
     $views = $collection->views();
     if (empty($views)) {
-        $SESSION->add_error_msg(get_string('emptycollectionnoeditaccess1', 'collection'));
+        $SESSION->add_error_msg(get_string('emptycollectionnoeditaccess', 'collection'));
         redirect('/collection/views.php?id=' . $collectionid);
     }
     // Pick any old view, they all have the same access records.
@@ -41,7 +41,7 @@ if (empty($collection)) {
     $collection = $view->get_collection();
 }
 
-define('TITLE', get_string('managesharing', 'view'));
+define('TITLE', get_string('editaccess', 'view'));
 
 $group = $view->get('group');
 $institution = $view->get('institution');
@@ -56,12 +56,6 @@ if ($view->get('template') == View::SITE_TEMPLATE) {
     throw new AccessDeniedException();
 }
 
-if ($group) {
-    $groupobj = get_group_by_id($group);
-    if (group_deny_access($groupobj, 'member')) {
-        throw new AccessDeniedException();
-    }
-}
 
 $form = array(
     'name' => 'editaccess',
@@ -200,8 +194,7 @@ $form['elements']['more'] = array(
             'type'         => 'switchbox',
             'title'        => get_string('allowcopying', 'view'),
             'description'  => get_string('templatedescriptionplural3', 'view'),
-            'defaultvalue' => !is_outcomes_group($group) && $view->get('template'),
-            'disabled'     => is_outcomes_group($group),
+            'defaultvalue' => $view->get('template'),
         ),
     ),
 );
@@ -558,7 +551,7 @@ function editaccess_submit(Pieform $form, $values) {
     if (isset($values['collections'])) {
         foreach ($values['collections'] as $cid) {
             if (!isset($collections[$cid])) {
-                throw new UserException(get_string('editaccessinvalidviewset2', 'view'));
+                throw new UserException(get_string('editaccessinvalidviewset1', 'view'));
             }
             $collection = new Collection($cid);
             if ($cpid = $collection->has_progresscompletion()) {
@@ -571,7 +564,7 @@ function editaccess_submit(Pieform $form, $values) {
     if (isset($values['views'])) {
         foreach ($values['views'] as $viewid) {
             if (!isset($views[$viewid])) {
-                throw new UserException(get_string('editaccessinvalidviewset2', 'view'));
+                throw new UserException(get_string('editaccessinvalidviewset1', 'view'));
             }
             $toupdate[] = $viewid;
         }
@@ -636,7 +629,6 @@ $smarty = smarty(
     ),
     array('sidebars' => false)
 );
-setpageicon($smarty, 'icon-share-nodes');
 $smarty->assign('INLINEJAVASCRIPT', $js);
 $smarty->assign('form', $form);
 $smarty->assign('shareurl', $shareurl);

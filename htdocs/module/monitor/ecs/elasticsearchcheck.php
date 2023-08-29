@@ -17,7 +17,7 @@
  *  - https://nagios-plugins.org/doc/guidelines.html#PLUGOUTPUT
  */
 
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('INTERNAL',  1);
 
 $MAHARA_ROOT = dirname(dirname(dirname(dirname(__FILE__)))) . '/';
@@ -50,15 +50,9 @@ if (!isset($argv) && !empty($_GET)) {
 require($MAHARA_ROOT . '/init.php');
 require(get_config('libroot') . 'cli.php');
 require_once(get_config('docroot') . '/module/monitor/lib.php');
-$cli = get_cli();
-$searchplugin = get_config('searchplugin');
-if ($searchplugin == 'elasticsearch') {
-    require_once(get_config('docroot') . '/module/monitor/type/MonitorType_elasticsearch.php');
-}
-else {
-    $cli->cli_exit(get_string('wrongsearchtype', 'module.monitor', $searchplugin, 'elasticsearch'));
-}
+require_once(get_config('docroot') . '/module/monitor/type/MonitorType_elasticsearch.php');
 
+$cli = get_cli();
 if (!PluginModuleMonitor::is_active()) {
     $cli->cli_exit(get_string('monitormodulenotactive', 'module.monitor'), 2);
 }
@@ -88,14 +82,8 @@ if ($isqueueold['status'] == true) {
     $hours = MonitorType_elasticsearch::get_hours_to_consider_elasticsearch_record_old();
     $cli->cli_exit(get_string('checkingelasticsearcholdunprocesessedfail', 'module.monitor', $hours, $hours), 2);
 }
-$unprocessedqueuerate = MonitorType_elasticsearch::unprocessed_queue_rate();
-if ($unprocessedqueuerate['rawvalue'] > 100) {
-    $cli->cli_exit(get_string('unprocessedqueueratecliwarn', 'module.monitor', $unprocessedqueuerate['rawvalue']));
-}
+
 if (!$cli->get_cli_param('okmessagedisabled')) {
-    if ($unprocessedqueuerate['rawvalue'] <= 100) {
-        $cli->cli_print(get_string('unprocessedqueueratecli', 'module.monitor', $unprocessedqueuerate['rawvalue']));
-    }
     $cli->cli_exit(get_string('checkingelasticsearchsucceed', 'module.monitor'), 0);
 }
 

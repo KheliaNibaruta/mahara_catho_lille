@@ -349,7 +349,7 @@ class LeapImportResume extends LeapImportArtefactPlugin {
                 if (count($artefactpluginelement) == 1) {
                     $artefactpluginelement = $artefactpluginelement[0];
 
-                    $maharaattributes = PluginImportLeap::get_attributes($artefactpluginelement, $importer->namespace_mahara);
+                    $maharaattributes = PluginImportLeap::get_attributes($artefactpluginelement, PluginImportLeap::NS_MAHARA);
                     if (isset($maharaattributes['type']) && in_array($maharaattributes['type'], $types)) {
                         $values = array(
                             'owner'   => $importer->get('usr'),
@@ -540,7 +540,7 @@ class LeapImportResume extends LeapImportArtefactPlugin {
                     }
                 }
 
-                $maharaattributes = PluginImportLeap::get_attributes($item, $importer->namespace_mahara);
+                $maharaattributes = PluginImportLeap::get_attributes($item, PluginImportLeap::NS_MAHARA);
 
                 if (isset($maharaattributes['field'])) {
                     if (in_array($maharaattributes['field'], array('placeofbirth', 'citizenship', 'visastatus', 'maritalstatus'))) {
@@ -827,8 +827,7 @@ class LeapImportResume extends LeapImportArtefactPlugin {
                                 $resumefieldvalue['disabled'][PluginImport::DECISION_REPLACE] = true;
                             }
                             else {
-                                $classname = generate_artefact_class_name($ier->entrytype);
-                                $is_singular = $classname::is_singular();
+                                $is_singular = call_static_method(generate_artefact_class_name($ier->entrytype), 'is_singular');
                                 $resumefieldvalue['disabled'][PluginImport::DECISION_ADDNEW] = $is_singular;
                                 $resumefieldvalue['disabled'][PluginImport::DECISION_APPEND] = !$is_singular;
                                 $resumefieldvalue['disabled'][PluginImport::DECISION_REPLACE] = !$is_singular;

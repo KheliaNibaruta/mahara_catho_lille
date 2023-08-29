@@ -17,8 +17,6 @@ $string['add']     = 'Add';
 $string['addspecific'] = 'Add "%s"';
 $string['addone']  = 'Add one';
 $string['cancel']  = 'Cancel';
-$string['configure'] = 'Configure';
-$string['configurespecific'] = 'Configure "%s"';
 $string['copy'] = 'Copy';
 $string['copytoclipboard']  = 'Copy secret URL to the clipboard';
 $string['delete']  = 'Delete';
@@ -44,7 +42,6 @@ $string['update']  = 'Update';
 $string['change']  = 'Change';
 $string['send']    = 'Send';
 $string['go']      = 'Go';
-$string['continue'] = 'Continue';
 $string['configfor'] = 'Configuration for';
 $string['infofor'] = 'Information for';
 $string['default'] = 'Default';
@@ -889,10 +886,6 @@ $string['collapsespecific'] = 'Collapse %s';
 $string['more...'] = 'More...';
 $string['moreoptions'] = 'More options';
 $string['moreoptionsfor'] = 'More options for "%s"';
-$string['submittedinfo'] = 'Submission information';
-$string['submittedinfofor'] = 'Submission information for "%s"';
-$string['releasedinfo'] = 'Release options';
-$string['releasedinfofor'] = 'Release options for "%s"';
 $string['details'] = 'details';
 $string['Details'] = 'Details';
 $string['nohelpfound'] = 'There was no help found for this item.';
@@ -946,7 +939,7 @@ $string['cantmoveitem'] = 'Cannot move this artefact.';
 
 $string['belongingto'] = 'Belonging to';
 $string['attachment'] = 'Attachment';
-$string['editaccess'] = 'Share';
+$string['editaccess'] = 'Edit access';
 
 // Upload manager
 $string['clammovedfile'] = 'The file has been moved to a quarantine directory.';
@@ -1377,7 +1370,6 @@ $string['styleguide_description'] = 'This style guide describes all the differen
 // Miscellaneous (please keep these alphabetized)
 $string['cli_incorrect_value'] = 'Incorrect value, please retry.';
 $string['progresspagedescription'] = 'Portfolio completion page for a collection.';
-$string['activitypagedescription'] = 'Activity page for an outcomes collection in groups.';
 $string['scroll_to_top'] = 'Back to top';
 $string['tabgroup'] = 'Group';
 $string['tabinstitution'] = 'Institution';

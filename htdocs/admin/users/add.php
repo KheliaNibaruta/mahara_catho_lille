@@ -85,7 +85,6 @@ $elements = array(
         'rules' => array('required' => true),
         'description' => get_password_policy_description(),
         'showstrength' => true,
-        'toggledisplay' => true,
     ),
     'staff' => array(
         'type' => 'switchbox',

@@ -486,8 +486,6 @@ $string['pathtoclamdescription'] = 'The file system path to clamscan or clamdsca
 $string['pathtoclamnotset'] = '(not set)';
 $string['progresscompletion'] = 'Portfolio completion';
 $string['progresscompletiondescription'] = "Add the 'Portfolio completion' page at the start of a collection to give an overview of the status of pages that need to be signed off (and verified).";
-$string['outcomeportfolio'] = 'Outcomes portfolio';
-$string['outcomeportfoliodescription'] = "Allow groups associated with this institution to use outcomes portfolios.";
 $string['registerterms'] = 'Registration agreement';
 $string['registertermsdescription1'] = "Force people to agree to the privacy statements plus terms and conditions before registration. You should edit your site's and institution's legal pages before enabling this option.";
 $string['licensemetadata'] = 'License metadata';
@@ -1539,7 +1537,6 @@ $string['cli_deleteinactivegroups_groupunabletoclean'] = 'Unable to fully delete
 $string['withselectedcontentexport'] = 'Re-queue items into the export queue';
 $string['withselectedcontentdelete'] = 'Delete selected items from the export queue';
 $string['withselectedcontentrelease'] = 'Release selected items';
-$string['withselectedcontentreleaseandreturn'] = 'Release selected items and return to the accounts';
 $string['allothers'] = 'All others';
 
 // Export portfolios
@@ -1567,24 +1564,6 @@ $string['cli_portfolio_export_zip'] = 'Please wait, creating bundled ZIP file...
 $string['cli_portfolio_export_zipout'] = 'Exported %s account(s) to %s';
 $string['cli_param_dryrun_export'] = 'Dry run to indicate what will happen. This is set to "true" by default. Set -d=false to actually run the export.';
 $string['cli_time_elapsed'] = 'Time taken: %s';
-
-// Outcomes tables data import
-$string['cli_outcomes_delete_description'] = 'Delete data from outcomes related tables if they are not already linked to an existing outcome.';
-$string['cli_outcomes_typefile_description'] = 'Path to the readable CSV file that contains outcome types table data, e.g. /tmp/outcome_types_tables.csv';
-$string['cli_outcomes_subjectfile_description'] = 'Path to the readable CSV file that contains outcome subjects table data, e.g. /tmp/outcomes_subjects_tables.csv';
-$string['cli_outcomes_institution_description'] = 'Used in conjunction with "delete" so it will only delete items from the specified institution, e.g. mahara';
-$string['cli_outcomes_institutionnotfound'] = 'Institution "%s" not found.';
-$string['cli_outcomes_info'] = 'Populate the outcomes related tables "outcome_category", "outcome_type", "outcome_subject_category", and "outcome_subject". The institution specified needs to have its "Outcomes portfolio" setting set to "Yes".';
-$string['cli_outcomes_bad_institution'] = 'The institution %s should exist and have its "Outcomes portfolio" setting set to "Yes".';
-$string['cli_outcomes_type_headers_error'] = 'Check headers in your file. They should be: Outcome category | Institution | Outcome type | Outcome type abbreviation | CSS class';
-$string['cli_outcomes_subject_headers_error'] = 'Check headers in your file. They should be: Outcome subject category | Institution | Subject | Subject abbreviation';
-$string['cli_outcomes_subject_added'] = 'Subject data added to database.';
-$string['cli_outcomes_no_subject_added'] = 'No subject data was added to the database. The tables could already be populated.';
-$string['cli_outcomes_type_added'] = 'Outcomes type data added to database.';
-$string['cli_outcomes_no_type_added'] = 'No outcomes type data was added to the database. The tables could already be populated.';
-$string['cli_outcomes_deleteing'] = 'Deleting un-used outcome related data...';
-$string['cli_outcomes_deleted'] = 'Deleted %s rows from the table "%s".';
-$string['cli_outcomes_nothing_deleted'] = 'Nothing to delete';
 
 // Behat variables script
 $string['behatvariables'] = 'Behat steps';

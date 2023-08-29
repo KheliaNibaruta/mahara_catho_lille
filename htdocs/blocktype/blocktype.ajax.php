@@ -10,7 +10,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('JSON', 1);
 define('NOSESSKEY', 1);
 
@@ -27,5 +27,4 @@ if (!can_view_view($block->get('view'))) {
 }
 
 safe_require_plugin('blocktype', $block->get('blocktype'));
-$classname = generate_class_name('blocktype', $block->get('blocktype'));
-echo $classname::render_instance($block);
+echo call_static_method(generate_class_name('blocktype', $block->get('blocktype')), 'render_instance', $block);

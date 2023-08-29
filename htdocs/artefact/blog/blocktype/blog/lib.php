@@ -38,7 +38,7 @@ class PluginBlocktypeBlog extends MaharaCoreBlocktype {
         return array('blog' => 10000);
     }
     public static function get_viewtypes() {
-        return array('dashboard', 'portfolio', 'profile', 'grouphomepage', 'activity');
+        return array('dashboard', 'portfolio', 'profile', 'grouphomepage');
     }
 
     public static function get_link(BlockInstance $instance) {
@@ -180,7 +180,6 @@ class PluginBlocktypeBlog extends MaharaCoreBlocktype {
                 'title' => get_string('postsperpage', 'blocktype.blog/blog'),
                 'defaultvalue' => isset($configdata['count']) ? $configdata['count'] : 5,
                 'size' => 3,
-                'rules' => array('integer' => true, 'minvalue' => 1, 'maxvalue' => 100),
             );
             $elements[] = PluginArtefactBlog::block_advanced_options_element($configdata, 'blog');
         }

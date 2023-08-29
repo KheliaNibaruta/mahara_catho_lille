@@ -10,7 +10,7 @@
  */
 
 define('INTERNAL', 1);
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('SECTION_PLUGINTYPE', 'core');
 define('SECTION_PLUGINNAME', 'view');
 define('SECTION_PAGE', 'framework');
@@ -122,10 +122,7 @@ if ($collection) {
         if ($collection->has_progresscompletion()) {
             array_unshift($viewnav, $collection->collection_nav_progresscompletion_option());
         }
-        if ($collection->has_outcomes()) {
-            array_unshift($viewnav, $collection->collection_nav_outcomes_option());
-        }
-        $smarty->assign('collectionnav', $viewnav);
+        $smarty->assign('collection', $viewnav);
     }
     $smarty->assign('collectiontitle', $collection->get('name'));
 }

@@ -32,6 +32,8 @@ $string['magicquotesgpc'] = 'You have dangerous PHP settings: magic_quotes_gpc i
 php_flag magic_quotes_gpc off';
 $string['magicquotesruntime'] = 'You have dangerous PHP settings: magic_quotes_runtime is on. Mahara is trying to work around this, but you should really fix it. If you are using shared hosting and your host allows for it, you should include the following line in your .htaccess file:
 php_flag magic_quotes_runtime off';
+$string['magicquotessybase'] = 'You have dangerous PHP settings: magic_quotes_sybase is on. Mahara is trying to work around this, but you should really fix it. If you are using shared hosting and your host allows for it, you should include the following line in your .htaccess file:
+php_flag magic_quotes_sybase off';
 
 $string['safemodeon'] = 'Your server appears to be running safe mode. Mahara does not support running in safe mode. You must turn this off in either the php.ini file or in your apache config for the site.
 
@@ -93,8 +95,6 @@ $string['wrongparamtype'] = 'A function or method has been passed the wrong kind
 
 $string['notfound'] = 'Not found';
 $string['notfoundexception'] = 'The page you are looking for could not be found.';
-$string['artefactnotfoundexception'] = 'The artefact you are looking for could not be found.';
-$string['artefactmissing'] = 'Unable to fetch artefact from dataroot.';
 
 $string['accessdenied'] = 'Access denied';
 $string['accessdeniedobjection'] = 'Access denied. The objection has already been resolved by another administrator.';
@@ -170,4 +170,3 @@ $string['fileuploadtoomany'] = 'You are trying to upload too many files. You can
 $string['sideblockmenuclash'] = 'The sideblock name "%s" is already in use. Please choose a different one.';
 $string['isolatedinstitutionsremoverules'] = 'We have hidden %s access rules due to isolated institutions being in effect. The hidden rules will be removed once the form is saved.';
 $string['randomkeyminlength'] = 'Length must be a positive integer equal to or greater than 8';
-$string['noviewcontrolaction'] = 'Unknown edit action: %s';

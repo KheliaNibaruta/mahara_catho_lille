@@ -1,45 +1,15 @@
 #!/bin/bash
 
-#Get the path to the Mahara directory
+# Get action and Mahara dir
+ACTION=$1
+REPORT=$3
 SCRIPTPATH=`readlink -f "${BASH_SOURCE[0]}"`
 MAHARAROOT=`dirname $( dirname $( dirname "$SCRIPTPATH" ))`
 BEHATROOT=`php ${MAHARAROOT}/htdocs/testing/frameworks/behat/cli/util.php --behat-root`
-
-# Sanity check Mahara's install state.
-if [ ! -d "$MAHARAROOT/htdocs/vendor" ];
-then
-    echo "Mahara is not installed. Please run 'make initcomposer' or 'composer install'"
-    exit 1
-fi
-
-if [ ! -f "$MAHARAROOT/htdocs/config.php" ];
-then
-    echo "Mahara is not configured. Please create and edit $MAHARAROOT/htdocs/config.php"
-    exit 1
-fi
-SELENIUM_PORT=
-PHP_PORT=
-numbers='^[0-9]+$'
-PHP_PORT_FROM_CONFIG=$(grep -Po "behat_wwwroot.+?:\s*\K[^/]+" $MAHARAROOT/htdocs/config.php)
-if ! [[ $PHP_PORT_FROM_CONFIG =~ $numbers ]] ; then
-    PHP_PORT=8000
-else
-    PHP_PORT=$PHP_PORT_FROM_CONFIG
-fi
-SELENIUM_PORT_FROM_CONFIG=$(grep -Po "behat_selenium2.+?:\s*\K[^/]+" $MAHARAROOT/htdocs/config.php)
-if ! [[ $SELENIUM_PORT_FROM_CONFIG =~ $numbers ]] ; then
-    SELENIUM_PORT=4444
-else
-    SELENIUM_PORT=$SELENIUM_PORT_FROM_CONFIG
-fi
-# Get action
-ACTION=$1
-REPORT=$3
-BEHATROOT=`php htdocs/testing/frameworks/behat/cli/util.php --behat-root`
 SERVER=0
 SERVERXVFB=
-test -z $SELENIUM_PORT && export SELENIUM_PORT=$SELENIUM_PORT
-test -z $PHP_PORT && export PHP_PORT=$PHP_PORT
+test -z $SELENIUM_PORT && export SELENIUM_PORT=4444
+test -z $PHP_PORT && export PHP_PORT=8000
 test -z $XVFB_PORT && export XVFB_PORT=10
 
 echo "Selenium port: $SELENIUM_PORT"
@@ -145,9 +115,6 @@ then
     if [[ $2 == @* ]]; then
         TAGS=$2
         echo "Only run tests with the tag: $TAGS"
-    elif [[ $2 == ~@* ]]; then
-        BADTAGS=$2
-        echo "Don't run test with the tag: $BADTAGS"
     elif [ $2 ]; then
         if [[ $2 == */* ]]; then
             FEATURE="test/behat/features/$2"
@@ -157,9 +124,6 @@ then
         if [[ $3 == @* ]]; then
             TAGS=$3
             echo "Only run tests in file: $FEATURE tagged with $TAGS"
-        elif [[ $3 == ~@* ]]; then
-            BADTAGS=$3
-            echo "Only run these in the file $FEATURE not tagged with $BADTAGS"
         else
             echo "Only run tests in file: $FEATURE"
         fi
@@ -262,9 +226,6 @@ then
 
     if [ "$TAGS" ]; then
         OPTIONS=$OPTIONS" --tags "$TAGS
-    fi
-    if [ "$BADTAGS" ]; then
-        OPTIONS=$OPTIONS" --tags "$BADTAGS
     fi
     if [ "$FEATURE" ]; then
         OPTIONS=$OPTIONS" "$FEATURE

@@ -9,7 +9,7 @@
  *
  */
 
-define('PUBLIC_ACCESS', 1);
+define('PUBLIC', 1);
 define('INTERNAL', 1);
 define('MENUITEM', 'engage/index');
 define('MENUITEM_SUBPAGE', 'forums');
@@ -31,9 +31,6 @@ $membership = group_user_access($groupid);
 
 if (!$membership && !$group->public) {
     throw new GroupAccessDeniedException(get_string('cantviewforums', 'interaction.forum'));
-}
-if (is_outcomes_group($group->id)) {
-  throw new AccessDeniedException();
 }
 
 define('TITLE', $group->name . ' - ' . get_string('nameplural', 'interaction.forum'));
@@ -124,7 +121,6 @@ $smarty = smarty(array(), $headers);
 $smarty->assign('groupid', $groupid);
 $smarty->assign('publicgroup', $group->public);
 $smarty->assign('feedlink', $feedlink);
-setpageicon($smarty, 'icon-regular icon-comment-dots');
 $smarty->assign('heading', $group->name);
 $smarty->assign('headingclass', 'page-header');
 $smarty->assign('rsswithtitle', true);

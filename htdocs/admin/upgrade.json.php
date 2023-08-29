@@ -72,16 +72,16 @@ if (!empty($upgrade)) {
     }
     $data['newversion'] = $upgrade->torelease . ' (' . $upgrade->to . ')' ;
     if ($name == 'core') {
-        $func_name = 'upgrade_core';
+        $funname = 'upgrade_core';
     }
     else if ($name == 'local') {
-        $func_name = 'upgrade_local';
+        $funname = 'upgrade_local';
     }
     else {
-        $func_name = 'upgrade_plugin';
+        $funname = 'upgrade_plugin';
     }
     try {
-        $func_name($upgrade);
+        $funname($upgrade);
         if (isset($upgrade->install)) {
             $data['install'] = $upgrade->install;
             log_info('- ' . str_pad($data['key'], 30, ' ') . ' ' . $data['newversion']);

@@ -1446,11 +1446,10 @@ class User {
         if ($group) {
             $this->reset_grouproles();
             $grouproles = $this->get('grouproles');
-            $view_type = $v->get('type');
             if (!isset($grouproles[$group])) {
                 return false;
             }
-            if (($view_type == 'grouphomepage' || $v->get('locked')) && $grouproles[$group] != 'admin') {
+            if (($v->get('type') == 'grouphomepage' || $v->get('locked')) && $grouproles[$group] != 'admin') {
                 return false;
             }
             require_once('group.php');
@@ -2202,7 +2201,7 @@ class LiveUser extends User {
         $this->populate($user);
         $this->SESSION->regenerate_id();
         $time = time();
-        $this->set('lastlastlogin', $this->get('lastlogin'));
+        $this->set('lastlastlogin', $this->lastlogin);
         $this->set('lastlogin', $time);
         $this->set('lastaccess', $time);
         $this->set('sessionid', session_id());

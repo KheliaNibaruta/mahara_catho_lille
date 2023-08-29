@@ -27,7 +27,7 @@ class PluginBlocktypeRecentForumPosts extends MaharaCoreBlocktype {
     }
 
     public static function get_viewtypes() {
-        return array('dashboard', 'portfolio', 'profile', 'grouphomepage', 'activity');
+        return array('dashboard', 'portfolio', 'profile', 'grouphomepage');
     }
 
     private static function get_group(BlockInstance $instance, $versioning=false) {
@@ -119,8 +119,7 @@ class PluginBlocktypeRecentForumPosts extends MaharaCoreBlocktype {
                             $f->filecount = count($f->attachments);
                             safe_require('artefact', 'file');
                             foreach ($f->attachments as $file) {
-                                $classname = generate_artefact_class_name($file->artefacttype);
-                                $file->icon = $classname::get_icon(array('id' => $file->id, 'post' => $f->id));
+                                $file->icon = call_static_method(generate_artefact_class_name($file->artefacttype), 'get_icon', array('id' => $file->id, 'post' => $f->id));
                             }
                         }
                     }
@@ -197,7 +196,8 @@ class PluginBlocktypeRecentForumPosts extends MaharaCoreBlocktype {
                 'description' => get_string('poststoshowdescription', 'blocktype.recentforumposts'),
                 'defaultvalue' => (isset($configdata['limit'])) ? intval($configdata['limit']) : 5,
                 'size' => 3,
-                'rules' => array('integer' => true, 'minvalue' => 1, 'maxvalue' => 100),
+                'minvalue' => 1,
+                'maxvalue' => 100,
             );
         }
         else {

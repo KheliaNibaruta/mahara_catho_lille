@@ -168,7 +168,7 @@ class webservice_soap_client_wsse {
     /* It's necessary to call it if you want to set a different user and
      * password
      */
-    public function ___setUsernameToken($username, $password) {
+    public function __setUsernameToken($username, $password) {
         $this->username = $username;
         $this->password = $password;
     }

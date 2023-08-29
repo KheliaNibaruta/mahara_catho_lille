@@ -122,7 +122,6 @@ class Elasticsearch7Type_block_instance extends Elasticsearch7Type {
                 bi.view AS view_id,
                 bi.title,
                 bi.configdata,
-                bi.blocktype,
                 v.owner,
                 v.institution,
                 v.group,
@@ -147,23 +146,11 @@ class Elasticsearch7Type_block_instance extends Elasticsearch7Type {
 
         $eols = ["\r\n", "\n", "\r"];
 
-        if (!empty($record->title)) {
-            $record->title = str_replace(
-                $eols,
-                ' ',
-                strip_tags($record->title)
-            );
-        }
-        else {
-            safe_require('blocktype', $bi->get('blocktype'));
-            $record->title = $bi->get_title();
-        }
-
-        // Sanity check.
-        if (empty($record->title)) {
-            $record->title = get_string('notitle', 'view');
-        }
-
+        $record->title = str_replace(
+            $eols,
+            ' ',
+            strip_tags($record->title)
+        );
         if (is_array($configdata)) {
             // We can only deal with blocktypes that have a 'text' configdata
             // for description at this point.

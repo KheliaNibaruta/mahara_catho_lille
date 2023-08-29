@@ -52,7 +52,6 @@ define('LOCATORS', array(
     'LEGAL',
     'WEBSERVICES',
     'PAGINATION',
-    'OUTCOMES'
 ));
 
 /**
@@ -94,7 +93,6 @@ define('BLOCKS', array(
     'Tags block' => '#sb-tags',
     'Group info' => '.bt-groupinfo',
     'Add new block' => '#newblock',
-    'Save block' => '[id^=instconf_action_configureblockinstance_id]',
 ));
 
 define('COMMENT', array(
@@ -180,8 +178,6 @@ define('MODAL', array(
     'Message' => 'div#modal_messages',
     'File download modal' => '#instconf_artefactfieldset_container',
     'Submission' => 'div[id^=instconf_action].submitcancel',
-    'Sign-off page' => '#signoff-confirm-form .modal-body .btn-group',
-    'Verify page' => '#verify-confirm-form .modal-body .btn-group',
 ));
 
 define('MISC', array(
@@ -264,7 +260,6 @@ define('VIEWS', array(
     'Page content' => '.user-page-content',
     'Last updated' => '.last-updated',
     'Main content' => 'div#column-container',
-    'Signed off' => 'a#signoff',
 ));
 
 define('REPORT', array(
@@ -306,18 +301,6 @@ define('TINYMCE', array(
 define ('WEBSERVICES', array(
     'Manage service access tokens' => '#webservices_token_pseudofieldset',
 ));
-
-define('OUTCOMES', [
-    'Save level' => '[id$=level_submit]',
-    'Activity pages' =>  '.progresstitle',
-    'Progress form' => '.outcome-progress-form',
-    'Complete outcome' => '#complete-confirm-form',
-    'Sign off activity page' => '#signoff-confirm-form',
-    'Un-sign off activity page' => '#unsignoff-confirm-form',
-    'Activity complete icon' => '#activity_complete',
-    'Incomplete outcome form' => '#incomplete-confirm-form',
-    'Complete outcome form' => '#complete-confirm-form',
-]);
 
 /**
  * Looks for the css or xpath for the requested property.

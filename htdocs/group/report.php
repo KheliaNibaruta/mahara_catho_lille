@@ -62,7 +62,6 @@ $pagination = array(
 $groupviews = View::render_participation_views($groupviews, 'group/participationgroupviews.tpl', $pagination);
 
 $smarty = smarty(array('paginator'));
-setpageicon($smarty, 'icon-chart-pie');
 $smarty->assign('baseurl', get_config('wwwroot') . 'group/report.php?group=' . $group->id);
 $smarty->assign('heading', $group->name);
 $smarty->assign('sharedviews', $sharedviews);

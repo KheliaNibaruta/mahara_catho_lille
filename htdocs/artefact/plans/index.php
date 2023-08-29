@@ -27,10 +27,6 @@ if (param_exists('group')) {
     define('MENUITEM_SUBPAGE', 'groupplans');
 
     $group = group_current_group();
-    if (is_outcomes_group($group->id)) {
-      throw new AccessDeniedException();
-    }
-
     $urlQuery = '?group=' . $group->id;
     $menuItem = 'engage/index';
     $title = $group->name . ' - ' . get_string('Plans','artefact.plans');
